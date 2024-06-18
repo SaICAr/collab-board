@@ -1,24 +1,40 @@
 "use client";
 
 import Image from "next/image";
-import { useMutation } from "convex/react";
+import { useEffect, useState } from "react";
+import { LoaderCircle } from "lucide-react";
 import { useOrganization } from "@clerk/nextjs";
 
 import { api } from "@/convex/_generated/api";
 import { Button } from "@/components/ui/button";
+import { useApiMutation } from "@/hooks/use-api-mutation";
 
 export const EmptyBoards = () => {
   const { organization } = useOrganization();
-  const create = useMutation(api.board.create);
+  const [images, setImages] = useState([]);
+  const { mutate, pending } = useApiMutation(api.board.create);
 
   const onClick = () => {
-    if (!organization) return;
+    if (!organization || !images.length) return;
 
-    create({
+    mutate({
       orgId: organization.id,
       title: "Untitled",
+      images,
     });
   };
+
+  const getPlaceholders = async () => {
+    const res = await fetch("/api/getPlaceholders");
+    const { data } = await res.json();
+    if (data && data.length) {
+      setImages(data);
+    }
+  };
+
+  useEffect(() => {
+    getPlaceholders();
+  }, []);
 
   return (
     <div className="h-full flex flex-col items-center justify-center">
@@ -27,7 +43,8 @@ export const EmptyBoards = () => {
       <h2 className="text-2xl font-semibold mt-6">创建第一个白板！</h2>
       <p className="text-muted-foreground text-sm mt-2">开始给你的组织创建第一个白板吧~</p>
       <div className="mt-4">
-        <Button size="lg" onClick={onClick}>
+        <Button disabled={pending} size="lg" onClick={onClick}>
+          {pending && <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />}
           创建白板
         </Button>
       </div>
