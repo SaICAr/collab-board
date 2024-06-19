@@ -2,13 +2,18 @@
 
 import { ClerkProvider, useAuth } from "@clerk/nextjs";
 import { ConvexProviderWithClerk } from "convex/react-clerk";
+import { setDefaultOptions } from "date-fns";
+import { zhCN as dateFnsZhCN } from "date-fns/locale";
 import { zhCN } from "@clerk/localizations";
 import { AuthLoading, Authenticated, ConvexReactClient } from "convex/react";
+
 import { Loading } from "@/components/auth/loading";
 
 interface ConvexClientProviderProps {
   children: React.ReactNode;
 }
+
+setDefaultOptions({ locale: dateFnsZhCN });
 
 const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL!;
 

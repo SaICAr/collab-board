@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { toast } from "sonner";
 import { useEffect, useState } from "react";
 import { LoaderCircle } from "lucide-react";
 import { useOrganization } from "@clerk/nextjs";
@@ -14,14 +15,20 @@ export const EmptyBoards = () => {
   const [images, setImages] = useState([]);
   const { mutate, pending } = useApiMutation(api.board.create);
 
-  const onClick = () => {
+  const onClick = async () => {
     if (!organization || !images.length) return;
 
-    mutate({
-      orgId: organization.id,
-      title: "Untitled",
-      images,
-    });
+    try {
+      const id = await mutate({
+        orgId: organization.id,
+        title: "Untitled",
+        images,
+      });
+
+      toast.success("创建成功");
+    } catch (error) {
+      toast.error(`创建失败，原因：${error}`);
+    }
   };
 
   const getPlaceholders = async () => {
