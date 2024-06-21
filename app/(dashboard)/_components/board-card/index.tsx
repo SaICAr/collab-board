@@ -2,10 +2,13 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { toast } from "sonner";
 import { useAuth } from "@clerk/nextjs";
 import { formatDistanceToNow } from "date-fns";
 import { MoreHorizontal } from "lucide-react";
 
+import { api } from "@/convex/_generated/api";
+import { useApiMutation } from "@/hooks/use-api-mutation";
 import { Actions } from "@/components/actions";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -23,12 +26,37 @@ interface BoardCardProps {
   isFavorite: boolean;
 }
 
-export const BoardCard = ({ id, title, imageUrl, authorId, authorName, createAt, isFavorite }: BoardCardProps) => {
+export const BoardCard = ({
+  id,
+  orgId,
+  title,
+  imageUrl,
+  authorId,
+  authorName,
+  createAt,
+  isFavorite,
+}: BoardCardProps) => {
   const { userId } = useAuth();
+
   const authorLabel = userId === authorId ? "You" : authorName;
   const createAtLabel = formatDistanceToNow(createAt, {
     addSuffix: true,
   });
+
+  const { mutate: onFavorite, pending: pendingFavorite } = useApiMutation(api.board.favorite);
+  const { mutate: onUnFavorite, pending: pendingUnFavorite } = useApiMutation(api.board.unFavorite);
+
+  const toggleFavorite = () => {
+    if (isFavorite) {
+      onUnFavorite({ id }).catch((err) => {
+        toast.error("取消收藏失败", err);
+      });
+    } else {
+      onFavorite({ id, orgId }).catch((err) => {
+        toast.error("收藏失败", err);
+      });
+    }
+  };
 
   return (
     <Link href={`/board/${id}`}>
@@ -54,8 +82,8 @@ export const BoardCard = ({ id, title, imageUrl, authorId, authorName, createAt,
           authorLabel={authorLabel}
           createAtLabel={createAtLabel}
           isFavorite={isFavorite}
-          disabled={false}
-          onStar={() => {}}
+          disabled={pendingFavorite || pendingUnFavorite}
+          onStar={toggleFavorite}
         />
       </div>
     </Link>

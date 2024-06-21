@@ -58,7 +58,7 @@ export const OrgSidebar = () => {
       >
         <Link href="/">
           <LayoutDashboard className="h-4 w-4 mr-2" />
-          Team boards
+          所有白板
         </Link>
       </Button>
 
@@ -77,7 +77,7 @@ export const OrgSidebar = () => {
           }}
         >
           <Star className="h-4 w-4 mr-2" />
-          Favorite boards
+          星标白板
         </Link>
       </Button>
     </div>
