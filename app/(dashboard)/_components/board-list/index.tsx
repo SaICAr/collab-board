@@ -4,10 +4,12 @@ import { useQuery } from "convex/react";
 
 import { api } from "@/convex/_generated/api";
 
-import { EmptyBoards } from "./empty-boards";
-import { EmptyFavorites } from "./empty-favorites";
-import { EmptySearch } from "./empty-search";
-import { BoardCard } from "./board-card";
+import { EmptyBoards } from "../empty-boards";
+import { EmptyFavorites } from "../empty-favorites";
+import { EmptySearch } from "../empty-search";
+import { BoardCard } from "../board-card";
+import { NewBoardButton } from "../new-board-button";
+import { BoardListSkeleton } from "./skeleton";
 
 interface BoardListProps {
   orgId: string;
@@ -22,7 +24,7 @@ export const BoardList = ({ orgId, query }: BoardListProps) => {
 
   // query有三种状态 1、有值 2、null（表示没查到） 3、undefined（表示查询中）
   if (data === undefined) {
-    return <div>Loading...</div>;
+    return <BoardListSkeleton orgId={orgId} favorites={query.favorites} />;
   }
 
   if (!data?.length && query.search) {
@@ -44,8 +46,9 @@ export const BoardList = ({ orgId, query }: BoardListProps) => {
         className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4
        lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-5 mt-8 pb-10"
       >
+        <NewBoardButton orgId={orgId} />
         {data?.map(({ _id, _creationTime, ...rest }) => (
-          <BoardCard key={_id} id={_id} createAt={_creationTime} isFavorite={false} {...rest} />
+          <BoardCard key={_id} id={_id} createAt={_creationTime} isFavorite={true} {...rest} />
         ))}
       </div>
     </div>

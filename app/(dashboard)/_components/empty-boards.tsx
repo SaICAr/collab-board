@@ -2,7 +2,6 @@
 
 import Image from "next/image";
 import { toast } from "sonner";
-import { useEffect, useState } from "react";
 import { LoaderCircle } from "lucide-react";
 import { useOrganization } from "@clerk/nextjs";
 
@@ -12,17 +11,15 @@ import { useApiMutation } from "@/hooks/use-api-mutation";
 
 export const EmptyBoards = () => {
   const { organization } = useOrganization();
-  const [images, setImages] = useState([]);
   const { mutate, pending } = useApiMutation(api.board.create);
 
   const onClick = async () => {
-    if (!organization || !images.length) return;
+    if (!organization) return;
 
     try {
       const id = await mutate({
         orgId: organization.id,
-        title: "Untitled",
-        images,
+        title: "未命名",
       });
 
       toast.success("创建成功");
@@ -30,18 +27,6 @@ export const EmptyBoards = () => {
       toast.error(`创建失败，原因：${error}`);
     }
   };
-
-  const getPlaceholders = async () => {
-    const res = await fetch("/api/getPlaceholders");
-    const { data } = await res.json();
-    if (data && data.length) {
-      setImages(data);
-    }
-  };
-
-  useEffect(() => {
-    getPlaceholders();
-  }, []);
 
   return (
     <div className="h-full flex flex-col items-center justify-center">
