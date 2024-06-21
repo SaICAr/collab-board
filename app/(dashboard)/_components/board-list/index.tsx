@@ -20,7 +20,7 @@ interface BoardListProps {
 }
 
 export const BoardList = ({ orgId, query }: BoardListProps) => {
-  const data = useQuery(api.boards.get, { orgId });
+  const data = useQuery(api.boards.get, { orgId, ...query });
 
   // query有三种状态 1、有值 2、null（表示没查到） 3、undefined（表示查询中）
   if (data === undefined) {
