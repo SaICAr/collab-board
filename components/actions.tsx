@@ -1,6 +1,7 @@
 "use client";
 
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 import { Link2, Pencil, Trash2 } from "lucide-react";
 import { DropdownMenuContentProps } from "@radix-ui/react-dropdown-menu";
 
@@ -26,6 +27,7 @@ interface ActionsProps {
 }
 
 export const Actions = ({ children, id, title, side, sideOffset }: ActionsProps) => {
+  const router = useRouter();
   const { onOpen } = useRenameModal();
   const { mutate, pending } = useApiMutation(api.board.remove);
 
@@ -36,6 +38,7 @@ export const Actions = ({ children, id, title, side, sideOffset }: ActionsProps)
       });
 
       toast.success("删除成功");
+      router.push("/");
     } catch (error) {
       toast.success("删除失败");
     }

@@ -26,8 +26,8 @@ export async function POST(request: Request) {
   }
 
   const userInfo = {
-    name: user.firstName,
-    picture: user.imageUrl,
+    name: user.firstName!,
+    avatar: user.imageUrl!,
   };
 
   const session = liveblocks.prepareSession(user.id, {
