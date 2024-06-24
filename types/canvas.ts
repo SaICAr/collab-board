@@ -105,7 +105,7 @@ export type CanvasState =
   | { mode: CanvasMode.SelectionNet; origin: Point; current?: Point }
   | {
       mode: CanvasMode.Inserting;
-      layerType: LayerType.Rectangle | LayerType.Circle | LayerType.Path | LayerType.Note | LayerType.Text;
+      layerType: LayerType.Rectangle | LayerType.Circle | LayerType.Note | LayerType.Text;
     }
   | { mode: CanvasMode.Resizing; initialBounds: XYWH; corner: Side }
   | { mode: CanvasMode.Pencil };
