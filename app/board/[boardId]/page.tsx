@@ -14,7 +14,7 @@ interface BoardIdPageProps {
 
 const BoardIdPage = ({ params }: BoardIdPageProps) => {
   return (
-    <LiveblocksProvider authEndpoint="/api/liveblocks-auth">
+    <LiveblocksProvider authEndpoint="/api/liveblocks-auth" throttle={16}>
       <Room roomId={params.boardId} fallback={<Loading />}>
         <Canvas boardId={params.boardId} />
       </Room>
