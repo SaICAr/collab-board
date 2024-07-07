@@ -11,7 +11,7 @@ export type Camera = {
 
 export enum LayerType {
   Rectangle, // 矩形
-  Circle, // 圆形
+  Ellipse, // 椭圆
   Path, // 画笔
   Text, // 文本
   Note, // 便签
@@ -27,8 +27,8 @@ export type RectangleLayer = {
   value?: string;
 };
 
-export type CircleLayer = {
-  type: LayerType.Circle;
+export type EllipseLayer = {
+  type: LayerType.Ellipse;
   x: number;
   y: number;
   height: number;
@@ -105,9 +105,9 @@ export type CanvasState =
   | { mode: CanvasMode.SelectionNet; origin: Point; current?: Point }
   | {
       mode: CanvasMode.Inserting;
-      layerType: LayerType.Rectangle | LayerType.Circle | LayerType.Note | LayerType.Text;
+      layerType: LayerType.Rectangle | LayerType.Ellipse | LayerType.Note | LayerType.Text;
     }
   | { mode: CanvasMode.Resizing; initialBounds: XYWH; corner: Side }
   | { mode: CanvasMode.Pencil };
 
-export type Layer = RectangleLayer | CircleLayer | PathLayer | TextLayer | NoteLayer;
+export type Layer = RectangleLayer | EllipseLayer | PathLayer | TextLayer | NoteLayer;

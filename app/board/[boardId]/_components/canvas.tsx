@@ -102,7 +102,7 @@ export const Canvas = ({ boardId }: CanvasProps) => {
   const insertLayer = useMutation(
     (
       { storage, setMyPresence },
-      layerType: LayerType.Circle | LayerType.Note | LayerType.Rectangle | LayerType.Text,
+      layerType: LayerType.Ellipse | LayerType.Note | LayerType.Rectangle | LayerType.Text,
       position: Point
     ) => {
       const liveLayers = storage.get("layers");

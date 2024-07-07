@@ -64,15 +64,15 @@ export const Toolbar = ({ canvasState, setCanvasState, undo, redo, canUndo, canR
           isActive={canvasState.mode === CanvasMode.Inserting && canvasState.layerType === LayerType.Rectangle}
         />
         <ToolButton
-          label="圆形"
+          label="椭圆"
           icon={Circle}
           onClick={() =>
             setCanvasState({
               mode: CanvasMode.Inserting,
-              layerType: LayerType.Circle,
+              layerType: LayerType.Ellipse,
             })
           }
-          isActive={canvasState.mode === CanvasMode.Inserting && canvasState.layerType === LayerType.Circle}
+          isActive={canvasState.mode === CanvasMode.Inserting && canvasState.layerType === LayerType.Ellipse}
         />
         <ToolButton
           label="画笔"
