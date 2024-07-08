@@ -96,10 +96,12 @@ export enum CanvasMode {
   Inserting, // 插入元素，适用于文本、矩形、圆形、便签
   Resizing, // 调整大小
   Pencil, // 绘画
+  Typing, // 打字状态
 }
 
 export type CanvasState =
   | { mode: CanvasMode.None }
+  | { mode: CanvasMode.Typing }
   | { mode: CanvasMode.Pressing; origin: Point }
   | { mode: CanvasMode.Translating; current: Point }
   | { mode: CanvasMode.SelectionNet; origin: Point; current?: Point }

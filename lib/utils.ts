@@ -1,7 +1,7 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 
-import { Camera, Color, Layer, Point, Side, XYWH } from "@/types/canvas";
+import { Camera, Color, Layer, LayerType, PathLayer, Point, Side, XYWH } from "@/types/canvas";
 
 const COLORS = ["#D97706", "#059669", "#7C3AED", "#DB2777", "#DC2626"];
 
@@ -97,4 +97,74 @@ export function getContrastingTextColor(color: Color) {
   const luminance = 0.299 * color.r + 0.587 * color.g + 0.114 * color.b;
 
   return luminance > 182 ? "black" : "white";
+}
+
+export function penPointsToPathLayer(points: number[][], color: Color): PathLayer {
+  if (points.length < 2) {
+    throw new Error("draw points less than 2");
+  }
+
+  let left = Number.POSITIVE_INFINITY;
+  let top = Number.POSITIVE_INFINITY;
+  let right = Number.NEGATIVE_INFINITY;
+  let bottom = Number.NEGATIVE_INFINITY;
+
+  for (const point of points) {
+    const [x, y] = point;
+
+    // 计算最小 x 坐标
+    if (left > x) {
+      left = x;
+    }
+
+    // 计算最小 y 坐标
+    if (top > y) {
+      top = y;
+    }
+
+    // 计算最大 x 坐标
+    if (right < x) {
+      right = x;
+    }
+    // 计算最大 y 坐标
+    if (bottom < y) {
+      bottom = y;
+    }
+  }
+
+  return {
+    type: LayerType.Path,
+    x: left,
+    y: top,
+    width: right - left,
+    height: bottom - top,
+    fill: color,
+    // 将每个点的 x 和 y 坐标归一化为相对于路径层左上角的坐标，压力值保持不变
+    points: points.map(([x, y, pressure]) => [x - left, y - top, pressure]),
+  };
+}
+
+// 计算 SVG 路径字符串
+export function getSvgPathFromStroke(stroke: number[][]) {
+  if (!stroke.length) return "";
+
+  const d = stroke.reduce(
+    (acc, [x0, y0], i, arr) => {
+      //  计算二次贝塞尔曲线
+      const [x1, y1] = arr[(i + 1) % arr.length];
+      // 计算当前点和下一个点的中点
+      acc.push(x0, y0, (x0 + x1) / 2, (y0 + y1) / 2);
+      return acc;
+    },
+
+    /**
+     * "M" 是 SVG 的移动命令，表示移动到第一个点（stroke[0]）
+     * "Q" 是二次贝塞尔曲线命令，用于绘制平滑的曲线
+     */
+    ["M", ...stroke[0], "Q"]
+  );
+
+  // "Z" 命令用于闭合路径，即从当前点绘制一条直线回到起点
+  d.push("Z");
+  return d.join(" ");
 }
