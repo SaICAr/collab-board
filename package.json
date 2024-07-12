@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@clerk/localizations": "^2.4.2",
-    "@clerk/nextjs": "^4.31.3",
+    "@clerk/nextjs": "^5.2.2",
     "@liveblocks/client": "^2.0.5",
     "@liveblocks/node": "^2.0.5",
     "@liveblocks/react": "^2.0.5",

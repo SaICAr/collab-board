@@ -89,8 +89,8 @@ export const Toolbar = ({ canvasState, setCanvasState, undo, redo, canUndo, canR
         className="bg-white rounded-md p-1.5 flex flex-col 
         items-center shadow-md"
       >
-        <ToolButton label="撤销" icon={Undo2} onClick={undo} isDisabled={!canUndo} />
-        <ToolButton label="恢复" icon={Redo2} onClick={redo} isDisabled={!canRedo} />
+        <ToolButton label="撤销（Ctrl + Z）" icon={Undo2} onClick={undo} isDisabled={!canUndo} />
+        <ToolButton label="恢复（Ctrl + Shift + Z）" icon={Redo2} onClick={redo} isDisabled={!canRedo} />
       </div>
     </div>
   );

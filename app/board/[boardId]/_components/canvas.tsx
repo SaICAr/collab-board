@@ -347,7 +347,7 @@ export const Canvas = ({ boardId }: CanvasProps) => {
     const onKeyDown = (e: KeyboardEvent) => {
       switch (e.key) {
         case "Delete":
-        case "Backspace":
+          // case "Backspace":
           deleteLayers();
           break;
 
@@ -383,7 +383,9 @@ export const Canvas = ({ boardId }: CanvasProps) => {
         undo={history.undo}
         redo={history.redo}
       />
-      <SelectionTools camera={camera} setLastUsedColor={setLastUsedColor} />
+      {canvasState.mode !== CanvasMode.SelectionNet && (
+        <SelectionTools camera={camera} setLastUsedColor={setLastUsedColor} />
+      )}
       <svg
         className="h-[100vh] w-[100vw]"
         onWheel={onWheel}
