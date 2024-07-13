@@ -1,4 +1,4 @@
-# Real-Time WhiteBoard
+# CollabBoard
 这是一个实时白板，采用以下技术栈：
 * Next.js
 * TypeScript
