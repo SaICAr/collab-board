@@ -23,6 +23,7 @@ import {
 } from "@/lib/utils";
 import { Camera, CanvasMode, CanvasState, Color, LayerType, Point, Side, XYWH } from "@/types/canvas";
 import { useDisableScrollBounce } from "@/hooks/use-disable-scroll-bounce";
+import { useDeleteLayers } from "@/hooks/use-delete-layers";
 
 import { Info } from "./info";
 import { Participants } from "./participants";
@@ -32,10 +33,12 @@ import { LayerPreview } from "./layer-preview";
 import { SelectionBox } from "./selection-box";
 import { SelectionTools } from "./selection-tools";
 import { Path } from "./layers/path";
-import { useDeleteLayers } from "@/hooks/use-delete-layers";
+import { SelectionNet } from "./selection-net";
+import { ZoomTool } from "./zoom-tool";
 
 const MAX_LAYERS = 100;
 const SELECTION_NET_THRESHOLD = 5;
+export const INSERT_LAYER_THRESHOLD = 5;
 
 interface CanvasProps {
   boardId: string;
@@ -157,15 +160,50 @@ export const Canvas = ({ boardId }: CanvasProps) => {
     [lastUsedColor]
   );
 
+  const startInserting = useCallback(
+    (point: Point) => {
+      if (canvasState.mode !== CanvasMode.Inserting) return;
+
+      setCanvasState({
+        mode: CanvasMode.Inserting,
+        layerType: canvasState.layerType,
+        origin: point,
+        current: point,
+      });
+    },
+    [canvasState]
+  );
+
+  const drawingLayer = useCallback(
+    (e: React.PointerEvent, current: Point, origin: Point) => {
+      // e.buttons 表示按下鼠标左键
+      if (canvasState.mode !== CanvasMode.Inserting || e.buttons !== 1) {
+        return;
+      }
+
+      setCanvasState({
+        mode: CanvasMode.Inserting,
+        layerType: canvasState.layerType,
+        origin,
+        current,
+      });
+    },
+    [canvasState]
+  );
+
   const insertLayer = useMutation(
     (
-      { storage, setMyPresence },
+      { storage },
       layerType: LayerType.Ellipse | LayerType.Note | LayerType.Rectangle | LayerType.Text,
-      position: Point
+      current: Point,
+      origin: Point
     ) => {
       const liveLayers = storage.get("layers");
 
-      if (liveLayers.size >= MAX_LAYERS) {
+      if (
+        liveLayers.size >= MAX_LAYERS ||
+        Math.abs(current.x - origin.x) + Math.abs(current.y - origin.y) < INSERT_LAYER_THRESHOLD
+      ) {
         return;
       }
 
@@ -173,18 +211,18 @@ export const Canvas = ({ boardId }: CanvasProps) => {
       const layerId = nanoid();
       const layer = new LiveObject({
         type: layerType,
-        x: position.x,
-        y: position.y,
-        width: 100,
-        height: 100,
+        x: Math.min(current.x, origin.x),
+        y: Math.min(current.y, origin.y),
+        width: Math.abs(current.x - origin.x),
+        height: Math.abs(current.y - origin.y),
         fill: lastUsedColor,
       });
 
       liveLayerIds.push(layerId);
       liveLayers.set(layerId, layer);
 
-      setMyPresence({ selection: [layerId] }, { addToHistory: true });
-      setCanvasState({ mode: CanvasMode.None });
+      // setMyPresence({ selection: [layerId] }, { addToHistory: true });
+      setCanvasState({ layerType, mode: CanvasMode.Inserting });
     },
     [lastUsedColor]
   );
@@ -250,6 +288,8 @@ export const Canvas = ({ boardId }: CanvasProps) => {
 
       if (canvasState.mode === CanvasMode.Pressing) {
         startMultiSelection(current, canvasState.origin);
+      } else if (canvasState.mode === CanvasMode.Inserting) {
+        canvasState.origin && drawingLayer(e, current, canvasState.origin);
       } else if (canvasState.mode === CanvasMode.SelectionNet) {
         updateSelectionNet(current, canvasState.origin);
       } else if (canvasState.mode === CanvasMode.Translating) {
@@ -277,7 +317,7 @@ export const Canvas = ({ boardId }: CanvasProps) => {
         unselectLayers();
         setCanvasState({ mode: CanvasMode.None });
       } else if (canvasState.mode === CanvasMode.Inserting) {
-        insertLayer(canvasState.layerType, point);
+        canvasState.origin && insertLayer(canvasState.layerType, point, canvasState.origin);
       } else if (canvasState.mode === CanvasMode.Pencil) {
         insertPath();
       } else {
@@ -296,6 +336,7 @@ export const Canvas = ({ boardId }: CanvasProps) => {
       const point = pointerEventToCanvasPoint(e, camera);
 
       if (canvasState.mode === CanvasMode.Inserting) {
+        startInserting(point);
         return;
       }
 
@@ -306,7 +347,7 @@ export const Canvas = ({ boardId }: CanvasProps) => {
 
       setCanvasState({ origin: point, mode: CanvasMode.Pressing });
     },
-    [camera, canvasState.mode, startDrawing]
+    [camera, canvasState.mode, startDrawing, startInserting]
   );
 
   const onLayerPointerDown = useMutation(
@@ -327,19 +368,26 @@ export const Canvas = ({ boardId }: CanvasProps) => {
     [camera, history, canvasState.mode]
   );
 
-  const selections = useOthersMapped((other) => other.presence.selection);
+  const mySelections = useSelf((me) => me.presence.selection);
+  const otherSelections = useOthersMapped((other) => other.presence.selection);
 
   const layerIdsToColorSelection = useMemo(() => {
     const layerIdsToColorSelection: Record<string, string> = {};
 
-    for (const [connectionId, selection] of selections) {
+    for (const [connectionId, selection] of otherSelections) {
       for (const layerId of selection) {
         layerIdsToColorSelection[layerId] = connectionIdToColor(connectionId);
       }
     }
 
+    if (mySelections.length) {
+      for (const layerId of mySelections) {
+        layerIdsToColorSelection[layerId] = "#3b82f6";
+      }
+    }
+
     return layerIdsToColorSelection;
-  }, [selections]);
+  }, [otherSelections, mySelections]);
 
   const deleteLayers = useDeleteLayers();
 
@@ -383,6 +431,7 @@ export const Canvas = ({ boardId }: CanvasProps) => {
         undo={history.undo}
         redo={history.redo}
       />
+      <ZoomTool />
       {canvasState.mode !== CanvasMode.SelectionNet && (
         <SelectionTools camera={camera} setLastUsedColor={setLastUsedColor} />
       )}
@@ -408,18 +457,7 @@ export const Canvas = ({ boardId }: CanvasProps) => {
             />
           ))}
           <SelectionBox onResizeHandlePointerDown={onResizeHandlePointerDown} />
-          {canvasState.mode === CanvasMode.SelectionNet && canvasState.current != null && (
-            <rect
-              className="fill-blue-500/5 stroke-blue-500 stroke-1"
-              style={{
-                transform: `translate(${Math.min(canvasState.origin.x, canvasState.current.x)}px, ${Math.min(canvasState.origin.y, canvasState.current.y)}px)`,
-              }}
-              x={0}
-              y={0}
-              width={Math.abs(canvasState.origin.x - canvasState.current.x)}
-              height={Math.abs(canvasState.origin.y - canvasState.current.y)}
-            />
-          )}
+          <SelectionNet canvasState={canvasState} />
           <CursorsPresence />
           {pencilDraft !== null && pencilDraft.length > 0 && (
             <Path points={pencilDraft} fill={colorToCss(lastUsedColor)} x={0} y={0} />

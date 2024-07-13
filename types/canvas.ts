@@ -91,8 +91,8 @@ export enum Side {
 export enum CanvasMode {
   None, // 初始状态
   Pressing, // 选中某个元素
-  SelectionNet, // 移动元素
-  Translating, // 转换元素
+  SelectionNet, // 选中（多选）元素
+  Translating, // 移动选中元素
   Inserting, // 插入元素，适用于文本、矩形、圆形、便签
   Resizing, // 调整大小
   Pencil, // 绘画
@@ -108,8 +108,12 @@ export type CanvasState =
   | {
       mode: CanvasMode.Inserting;
       layerType: LayerType.Rectangle | LayerType.Ellipse | LayerType.Note | LayerType.Text;
+      origin?: Point;
+      current?: Point;
     }
   | { mode: CanvasMode.Resizing; initialBounds: XYWH; corner: Side }
   | { mode: CanvasMode.Pencil };
 
 export type Layer = RectangleLayer | EllipseLayer | PathLayer | TextLayer | NoteLayer;
+
+export type InsertableLayer = EllipseLayer | NoteLayer | RectangleLayer | TextLayer;
