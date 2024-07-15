@@ -21,7 +21,17 @@ import {
   pointerEventToCanvasPoint,
   resizeBounds,
 } from "@/lib/utils";
-import { Camera, CanvasMode, CanvasState, Color, LayerType, Point, Side, XYWH } from "@/types/canvas";
+import {
+  Camera,
+  CanvasMode,
+  CanvasState,
+  Color,
+  InsertableLayerType,
+  LayerType,
+  Point,
+  Side,
+  XYWH,
+} from "@/types/canvas";
 import { useDisableScrollBounce } from "@/hooks/use-disable-scroll-bounce";
 import { useDeleteLayers } from "@/hooks/use-delete-layers";
 
@@ -36,7 +46,7 @@ import { Path } from "./layers/path";
 import { SelectionNet } from "./selection-net";
 import { ZoomTool } from "./zoom-tool";
 
-const MAX_LAYERS = 100;
+export const MAX_LAYERS = 100;
 const SELECTION_NET_THRESHOLD = 5;
 export const INSERT_LAYER_THRESHOLD = 5;
 
@@ -192,12 +202,7 @@ export const Canvas = ({ boardId }: CanvasProps) => {
   );
 
   const insertLayer = useMutation(
-    (
-      { storage },
-      layerType: LayerType.Ellipse | LayerType.Note | LayerType.Rectangle | LayerType.Text,
-      current: Point,
-      origin: Point
-    ) => {
+    ({ storage }, layerType: InsertableLayerType, current: Point, origin: Point) => {
       const liveLayers = storage.get("layers");
 
       if (

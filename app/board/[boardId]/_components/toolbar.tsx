@@ -3,6 +3,7 @@ import { Circle, MousePointer2, Pencil, Redo2, Square, StickyNote, Type, Undo2 }
 import { CanvasMode, CanvasState, LayerType } from "@/types/canvas";
 
 import { ToolButton } from "./tool-button";
+import { ImageUploadButton } from "./image-upload-button";
 
 interface ToolbarProps {
   canvasState: CanvasState;
@@ -84,7 +85,10 @@ export const Toolbar = ({ canvasState, setCanvasState, undo, redo, canUndo, canR
           }
           isActive={canvasState.mode === CanvasMode.Pencil}
         />
+
+        <ImageUploadButton setCanvasState={setCanvasState} />
       </div>
+
       <div
         className="bg-white rounded-md p-1.5 flex flex-col 
         items-center shadow-md"

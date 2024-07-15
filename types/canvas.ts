@@ -15,57 +15,26 @@ export enum LayerType {
   Path, // 画笔
   Text, // 文本
   Note, // 便签
+  Image, // 自定义图片
 }
 
-export type RectangleLayer = {
-  type: LayerType.Rectangle;
+type BaseLayer<T> = {
+  type: T;
   x: number;
   y: number;
   height: number;
   width: number;
-  fill: Color;
+  fill?: Color;
   value?: string;
 };
 
-export type EllipseLayer = {
-  type: LayerType.Ellipse;
-  x: number;
-  y: number;
-  height: number;
-  width: number;
-  fill: Color;
-  value?: string;
-};
-
-export type PathLayer = {
-  type: LayerType.Path;
-  x: number;
-  y: number;
-  height: number;
-  width: number;
-  fill: Color;
+export type RectangleLayer = BaseLayer<LayerType.Rectangle>;
+export type EllipseLayer = BaseLayer<LayerType.Ellipse>;
+export type TextLayer = BaseLayer<LayerType.Text>;
+export type NoteLayer = BaseLayer<LayerType.Note>;
+export type ImageLayer = BaseLayer<LayerType.Image>;
+export type PathLayer = BaseLayer<LayerType.Path> & {
   points: number[][];
-  value?: string;
-};
-
-export type TextLayer = {
-  type: LayerType.Text;
-  x: number;
-  y: number;
-  height: number;
-  width: number;
-  fill: Color;
-  value?: string;
-};
-
-export type NoteLayer = {
-  type: LayerType.Note;
-  x: number;
-  y: number;
-  height: number;
-  width: number;
-  fill: Color;
-  value?: string;
 };
 
 export type Point = {
@@ -93,7 +62,7 @@ export enum CanvasMode {
   Pressing, // 选中某个元素
   SelectionNet, // 选中（多选）元素
   Translating, // 移动选中元素
-  Inserting, // 插入元素，适用于文本、矩形、圆形、便签
+  Inserting, // 插入元素
   Resizing, // 调整大小
   Pencil, // 绘画
   Typing, // 打字状态
@@ -107,13 +76,20 @@ export type CanvasState =
   | { mode: CanvasMode.SelectionNet; origin: Point; current?: Point }
   | {
       mode: CanvasMode.Inserting;
-      layerType: LayerType.Rectangle | LayerType.Ellipse | LayerType.Note | LayerType.Text;
+      layerType: InsertableLayerType;
       origin?: Point;
       current?: Point;
     }
   | { mode: CanvasMode.Resizing; initialBounds: XYWH; corner: Side }
   | { mode: CanvasMode.Pencil };
 
-export type Layer = RectangleLayer | EllipseLayer | PathLayer | TextLayer | NoteLayer;
+export type Layer = RectangleLayer | EllipseLayer | PathLayer | TextLayer | NoteLayer | ImageLayer;
 
-export type InsertableLayer = EllipseLayer | NoteLayer | RectangleLayer | TextLayer;
+export type InsertableLayer = EllipseLayer | NoteLayer | RectangleLayer | TextLayer | ImageLayer;
+
+export type InsertableLayerType =
+  | LayerType.Rectangle
+  | LayerType.Ellipse
+  | LayerType.Note
+  | LayerType.Text
+  | LayerType.Image;

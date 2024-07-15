@@ -5,6 +5,7 @@ import { Loader } from "lucide-react";
 import { Info } from "./info";
 import { Participants } from "./participants";
 import { Toolbar } from "./toolbar";
+import { ZoomTool } from "./zoom-tool";
 
 export const Loading = () => {
   return (
@@ -13,6 +14,7 @@ export const Loading = () => {
       <Info.Skeleton />
       <Participants.Skeleton />
       <Toolbar.Skeleton />
+      <ZoomTool.Skeleton />
     </main>
   );
 };

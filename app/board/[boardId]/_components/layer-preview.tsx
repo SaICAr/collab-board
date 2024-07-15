@@ -2,13 +2,16 @@
 
 import { memo } from "react";
 import { useStorage } from "@liveblocks/react/suspense";
+
+import { colorToCss } from "@/lib/utils";
 import { LayerType } from "@/types/canvas";
+
 import { Rectangle } from "./layers/rectangle";
 import { Ellipse } from "./layers/ellipse";
 import { Text } from "./layers/text";
 import { Note } from "./layers/note";
 import { Path } from "./layers/path";
-import { colorToCss } from "@/lib/utils";
+import { Image } from "./layers/image";
 
 interface LayerPreviewProps {
   id: string;
@@ -24,6 +27,8 @@ export const LayerPreview = memo(({ id, onLayerPointerDown, selectionColor }: La
   }
 
   switch (layer.type) {
+    case LayerType.Image:
+      return <Image id={id} layer={layer} onPointerDown={onLayerPointerDown} selectionColor={selectionColor} />;
     case LayerType.Path:
       return (
         <Path
