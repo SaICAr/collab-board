@@ -21,17 +21,7 @@ import {
   pointerEventToCanvasPoint,
   resizeBounds,
 } from "@/lib/utils";
-import {
-  Camera,
-  CanvasMode,
-  CanvasState,
-  Color,
-  InsertableLayerType,
-  LayerType,
-  Point,
-  Side,
-  XYWH,
-} from "@/types/canvas";
+import { Camera, CanvasMode, CanvasState, Color, InsertableLayerType, Point, Side, XYWH } from "@/types/canvas";
 import { useDisableScrollBounce } from "@/hooks/use-disable-scroll-bounce";
 import { useDeleteLayers } from "@/hooks/use-delete-layers";
 
@@ -45,6 +35,7 @@ import { SelectionTools } from "./selection-tools";
 import { Path } from "./layers/path";
 import { SelectionNet } from "./selection-net";
 import { ZoomTool } from "./zoom-tool";
+import { DownloadButton } from "./download-button";
 
 export const MAX_LAYERS = 100;
 const SELECTION_NET_THRESHOLD = 5;
@@ -427,7 +418,12 @@ export const Canvas = ({ boardId }: CanvasProps) => {
   return (
     <main className="h-full w-full relative bg-neutral-100 touch-none">
       <Info boardId={boardId} />
-      <Participants />
+
+      <div className="flex items-center absolute h-12 top-2 right-2">
+        <DownloadButton />
+        <Participants />
+      </div>
+
       <Toolbar
         canvasState={canvasState}
         setCanvasState={setCanvasState}
@@ -441,6 +437,7 @@ export const Canvas = ({ boardId }: CanvasProps) => {
         <SelectionTools camera={camera} setLastUsedColor={setLastUsedColor} />
       )}
       <svg
+        id="svg-canvas"
         className="h-[100vh] w-[100vw]"
         onWheel={onWheel}
         onPointerMove={onPointerMove}

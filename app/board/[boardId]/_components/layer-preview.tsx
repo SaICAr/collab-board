@@ -28,6 +28,7 @@ export const LayerPreview = memo(({ id, onLayerPointerDown, selectionColor }: La
 
   switch (layer.type) {
     case LayerType.Image:
+      // eslint-disable-next-line jsx-a11y/alt-text
       return <Image id={id} layer={layer} onPointerDown={onLayerPointerDown} selectionColor={selectionColor} />;
     case LayerType.Path:
       return (
