@@ -1,7 +1,20 @@
+import { Matrix } from "pixi.js";
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 
-import { Camera, Color, Layer, LayerType, PathLayer, Point, Side, XYWH } from "@/types/canvas";
+import {
+  Camera,
+  Color,
+  Layer,
+  LayerType,
+  PathLayer,
+  Point,
+  ResizeOp,
+  Side,
+  MatrixArr,
+  TransformRect,
+  XYWH,
+} from "@/types/canvas";
 
 const COLORS = ["#D97706", "#059669", "#7C3AED", "#DB2777", "#DC2626"];
 
@@ -179,6 +192,7 @@ export function penPointsToPathLayer(points: number[][], color: Color): PathLaye
     y: top,
     width: right - left,
     height: bottom - top,
+    transform: [1, 0, 0, 1, left, top],
     fill: color,
     // 将每个点的 x 和 y 坐标归一化为相对于路径层左上角的坐标，压力值保持不变
     points: points.map(([x, y, pressure]) => [x - left, y - top, pressure]),
@@ -209,3 +223,225 @@ export function getSvgPathFromStroke(stroke: number[][]) {
   d.push("Z");
   return d.join(" ");
 }
+
+const doubleSize = (width: number, height: number) => ({
+  width: width * 2,
+  height: height * 2,
+});
+
+// 不同控制点对应的操作
+const resizeOps: Record<string, ResizeOp> = {
+  [Side.Top + Side.Left]: {
+    getLocalOrigin: (width, height) => {
+      return { x: width, y: height };
+    },
+    getNewSize: (newLocalPt, localOrigin) => {
+      return {
+        width: localOrigin.x - newLocalPt.x,
+        height: localOrigin.y - newLocalPt.y,
+      };
+    },
+    isBaseWidthWhenKeepRatio: (isWidthLarger: boolean) => isWidthLarger,
+    getSizeWhenScaleFromCenter: doubleSize,
+  },
+  [Side.Top]: {
+    getLocalOrigin: (width, height) => ({ x: width / 2, y: height }),
+    getNewSize: (newLocalPt, localOrigin, rect) => ({
+      width: rect.width,
+      height: localOrigin.y - newLocalPt.y,
+    }),
+    isBaseWidthWhenKeepRatio: () => false,
+    getSizeWhenScaleFromCenter: (width, height) => ({
+      width: width,
+      height: height * 2,
+    }),
+  },
+  [Side.Top + Side.Right]: {
+    getLocalOrigin: (_width, height) => ({ x: 0, y: height }),
+    getNewSize: (newLocalPt, localOrigin) => ({
+      width: newLocalPt.x - localOrigin.x,
+      height: localOrigin.y - newLocalPt.y,
+    }),
+    isBaseWidthWhenKeepRatio: (isWidthLarger: boolean) => isWidthLarger,
+    getSizeWhenScaleFromCenter: doubleSize,
+  },
+  [Side.Right]: {
+    getLocalOrigin: (_width, height) => ({ x: 0, y: height / 2 }),
+    getNewSize: (newLocalPt, localOrigin, rect) => ({
+      width: newLocalPt.x - localOrigin.x,
+      height: rect.height,
+    }),
+    isBaseWidthWhenKeepRatio: () => true,
+    getSizeWhenScaleFromCenter: (width, height) => ({
+      width: width * 2,
+      height: height,
+    }),
+  },
+  [Side.Bottom + Side.Right]: {
+    getLocalOrigin: () => ({ x: 0, y: 0 }),
+    getNewSize: (newLocalPt, localOrigin) => ({
+      width: newLocalPt.x - localOrigin.x,
+      height: newLocalPt.y - localOrigin.y,
+    }),
+    isBaseWidthWhenKeepRatio: (isWidthLarger: boolean) => isWidthLarger,
+    getSizeWhenScaleFromCenter: doubleSize,
+  },
+  [Side.Bottom]: {
+    getLocalOrigin: (width) => ({ x: width / 2, y: 0 }),
+    getNewSize: (newLocalPt, localOrigin, rect) => ({
+      width: rect.width,
+      height: newLocalPt.y - localOrigin.y,
+    }),
+    isBaseWidthWhenKeepRatio: () => false,
+    getSizeWhenScaleFromCenter: (width, height) => ({
+      width: width,
+      height: height * 2,
+    }),
+  },
+  [Side.Bottom + Side.Left]: {
+    getLocalOrigin: (width: number) => ({ x: width, y: 0 }),
+    getNewSize: (newLocalPt: Point, localOrigin: Point) => ({
+      width: localOrigin.x - newLocalPt.x,
+      height: newLocalPt.y - localOrigin.y,
+    }),
+    isBaseWidthWhenKeepRatio: (isWidthLarger: boolean) => isWidthLarger,
+    getSizeWhenScaleFromCenter: doubleSize,
+  },
+  [Side.Left]: {
+    getLocalOrigin: (width, height) => ({ x: width, y: height / 2 }),
+    getNewSize: (newLocalPt, localOrigin, rect) => ({
+      width: localOrigin.x - newLocalPt.x,
+      height: rect.height,
+    }),
+    isBaseWidthWhenKeepRatio: () => true,
+    getSizeWhenScaleFromCenter: (width, height) => ({
+      width: width * 2,
+      height: height,
+    }),
+  },
+};
+
+export const resizeRect = (
+  corner: Side,
+  newGlobalPt: Point,
+  rect: TransformRect,
+  options: {
+    // keepRatio?: boolean;
+    // scaleFromCenter?: boolean;
+    noChangeWidthAndHeight?: boolean;
+  } = {
+    // keepRatio: false,
+    // scaleFromCenter: false,
+    noChangeWidthAndHeight: false,
+  }
+): TransformRect => {
+  const resizeOp = resizeOps[corner];
+
+  if (!resizeOp) {
+    throw new Error("resize corner ${corner} is invalid");
+  }
+
+  const transform = new Matrix(...rect.transform);
+  const newRect = {
+    width: 0,
+    height: 0,
+    transform: transform.clone(),
+  };
+
+  const localOrigin = resizeOp.getLocalOrigin(rect.width, rect.height);
+
+  const newLocalPt = transform.applyInverse(newGlobalPt);
+  console.log("newLocalPt", newLocalPt);
+
+  let size = resizeOp.getNewSize(newLocalPt, localOrigin, rect);
+
+  const scaleTf = new Matrix();
+
+  if (options.noChangeWidthAndHeight) {
+    // width 和 height 维持不变，计算缩放比
+    scaleTf.scale(size.width / rect.width, size.height / rect.height);
+    newRect.width = rect.width;
+    newRect.height = rect.height;
+  } else {
+    // 根据 dw/dh 的正负值判断是否发生翻转
+    newRect.width = Math.abs(size.width);
+    newRect.height = Math.abs(size.height);
+    const scaleX = Math.sign(size.width) || 1;
+    const scaleY = Math.sign(size.height) || 1;
+    scaleTf.scale(scaleX, scaleY);
+  }
+
+  // 应用翻转矩阵
+  newRect.transform = newRect.transform.append(scaleTf);
+
+  // 计算位移量
+  const newGlobalOrigin = newRect.transform.apply(resizeOp.getLocalOrigin(newRect.width, newRect.height));
+  const globalOrigin = transform.apply(localOrigin);
+
+  const offset = {
+    x: globalOrigin.x - newGlobalOrigin.x,
+    y: globalOrigin.y - newGlobalOrigin.y,
+  };
+
+  // 应用位移矩阵
+  newRect.transform.prepend(new Matrix().translate(offset.x, offset.y));
+
+  return {
+    width: newRect.width,
+    height: newRect.height,
+    transform: matrixToArray(newRect.transform),
+  };
+};
+
+// 计算缩放后的 width 和 height
+const getTransformedSize = (
+  rect: TransformRect
+): {
+  width: number;
+  height: number;
+} => {
+  // 求的是向量长度，所以 tx 和 ty 要改为 0
+  const tf = new Matrix(rect.transform[0], rect.transform[1], rect.transform[2], rect.transform[3], 0, 0);
+  const rightTop = tf.apply({ x: rect.width, y: 0 });
+  const leftBottom = tf.apply({ x: 0, y: rect.height });
+  const zero = { x: 0, y: 0 };
+  return {
+    width: distance(rightTop, zero),
+    height: distance(leftBottom, zero),
+  };
+};
+
+export const recomputeTransformRect = (rect: TransformRect): TransformRect => {
+  const newSize = getTransformedSize(rect);
+  const scaleX = newSize.width ? rect.width / newSize.width : 1;
+  const scaleY = newSize.height ? rect.height / newSize.height : 1;
+  const scaleMatrix = new Matrix().scale(scaleX, scaleY);
+
+  const tf = new Matrix(...rect.transform).append(scaleMatrix);
+
+  return {
+    width: newSize.width,
+    height: newSize.height,
+    transform: matrixToArray(tf),
+  };
+};
+
+export const distance = (p1: Point, p2: Point) => {
+  return Math.sqrt(Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2));
+};
+
+export const matrixToArray = (matrix: Matrix): MatrixArr => {
+  return [matrix.a, matrix.b, matrix.c, matrix.d, matrix.tx, matrix.ty];
+};
+
+export const getInitTransform = ({ x, y }: Point): MatrixArr => {
+  return matrixToArray(new Matrix().translate(x, y));
+};
+
+// 变换前后图形的八个点位，计算出变换后左上角对应point
+export const getTransformedLayerPoint = (points: Point[]): Point => {
+  const minX = Math.min(...points.map((p) => p.x));
+  const minY = Math.min(...points.map((p) => p.y));
+
+  return { x: minX, y: minY };
+};

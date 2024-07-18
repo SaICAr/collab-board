@@ -1,8 +1,9 @@
 "use client";
 
 import { nanoid } from "nanoid";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { LiveObject } from "@liveblocks/client";
+import { Matrix } from "pixi.js";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { LiveMap, LiveObject } from "@liveblocks/client";
 import {
   useHistory,
   useCanUndo,
@@ -17,11 +18,27 @@ import {
   colorToCss,
   connectionIdToColor,
   findIntersectingLayersWithRectangle,
+  getInitTransform,
+  getTransformedLayerPoint,
+  matrixToArray,
   penPointsToPathLayer,
   pointerEventToCanvasPoint,
+  recomputeTransformRect,
   resizeBounds,
+  resizeRect,
 } from "@/lib/utils";
-import { Camera, CanvasMode, CanvasState, Color, InsertableLayerType, Point, Side, XYWH } from "@/types/canvas";
+import {
+  Camera,
+  CanvasMode,
+  CanvasState,
+  Color,
+  InsertableLayerType,
+  Layer,
+  Point,
+  Side,
+  TransformRect,
+  XYWH,
+} from "@/types/canvas";
 import { useDisableScrollBounce } from "@/hooks/use-disable-scroll-bounce";
 import { useDeleteLayers } from "@/hooks/use-delete-layers";
 
@@ -49,6 +66,7 @@ export const Canvas = ({ boardId }: CanvasProps) => {
   const layerIds = useStorage((root) => root.layerIds);
   const pencilDraft = useSelf((me) => me.presence.pencilDraft);
 
+  const prevLayers = useRef<ReadonlyMap<string, Layer> | null>(null);
   const [canvasState, setCanvasState] = useState<CanvasState>({
     mode: CanvasMode.None,
   });
@@ -71,9 +89,12 @@ export const Canvas = ({ boardId }: CanvasProps) => {
     }));
   }, []);
 
-  const onResizeHandlePointerDown = useCallback(
-    (corner: Side, initialBounds: XYWH) => {
+  const onResizeHandlePointerDown = useMutation(
+    ({ storage }, corner: Side, initialBounds: XYWH) => {
       history.pause();
+
+      const layers = storage.get("layers");
+      prevLayers.current = layers.toImmutable();
 
       setCanvasState({
         mode: CanvasMode.Resizing,
@@ -205,12 +226,20 @@ export const Canvas = ({ boardId }: CanvasProps) => {
 
       const liveLayerIds = storage.get("layerIds");
       const layerId = nanoid();
+
+      const x = Math.min(current.x, origin.x);
+      const y = Math.min(current.y, origin.y);
+      const width = Math.abs(current.x - origin.x);
+      const height = Math.abs(current.y - origin.y);
+      const transform = getInitTransform({ x, y });
+
       const layer = new LiveObject({
         type: layerType,
-        x: Math.min(current.x, origin.x),
-        y: Math.min(current.y, origin.y),
-        width: Math.abs(current.x - origin.x),
-        height: Math.abs(current.y - origin.y),
+        x,
+        y,
+        width,
+        height,
+        transform,
         fill: lastUsedColor,
       });
 
@@ -240,9 +269,16 @@ export const Canvas = ({ boardId }: CanvasProps) => {
         const layer = liveLayers.get(id);
 
         if (layer) {
+          const x = layer.get("x") + offset.x;
+          const y = layer.get("y") + offset.y;
+          const transform = matrixToArray(new Matrix(...layer.get("transform")).translate(offset.x, offset.y));
+
+          console.log("translating", x, y, transform);
+
           layer.update({
-            x: layer.get("x") + offset.x,
-            y: layer.get("y") + offset.y,
+            x,
+            y,
+            transform,
           });
         }
       }
@@ -264,13 +300,106 @@ export const Canvas = ({ boardId }: CanvasProps) => {
         return;
       }
 
-      const bounds = resizeBounds(canvasState.initialBounds, canvasState.corner, point);
+      const { initialBounds, corner } = canvasState;
 
       const liveLayers = storage.get("layers");
-      const layer = liveLayers.get(self.presence.selection[0]);
+      const selections = self.presence.selection;
 
-      if (layer) {
-        layer.update(bounds);
+      if (selections.length > 1) {
+        const startMultiRect: TransformRect = {
+          width: initialBounds.width,
+          height: initialBounds.height,
+          transform: getInitTransform({ x: initialBounds.x, y: initialBounds.y }),
+        };
+
+        const newMultiRect = resizeRect(corner, point, startMultiRect, {
+          noChangeWidthAndHeight: true,
+        });
+
+        /**
+         * 计算旧transform到新transform所需要应用的矩阵B
+         *  B * A(旧) = C(新)
+         *  B = C(新) * A'(旧的逆矩阵)
+         */
+        const prependedTransform = new Matrix(...newMultiRect.transform).append(
+          new Matrix(...startMultiRect.transform).invert()
+        );
+
+        for (let layerId of selections) {
+          const layer = liveLayers.get(layerId);
+          const prevLayer = prevLayers.current?.get(layerId);
+
+          if (layer && prevLayer) {
+            const rect: TransformRect = {
+              width: prevLayer.width,
+              height: prevLayer.height,
+              transform: matrixToArray(new Matrix(...prevLayer.transform).prepend(prependedTransform)),
+            };
+
+            const { width, height, transform } = recomputeTransformRect(rect);
+
+            const leftTop = prependedTransform.apply({ x: prevLayer.x, y: prevLayer.y });
+            const rightTop = prependedTransform.apply({ x: prevLayer.x + prevLayer.width, y: prevLayer.y });
+            const leftBottom = prependedTransform.apply({ x: prevLayer.x, y: prevLayer.y + prevLayer.height });
+            const rightBottom = prependedTransform.apply({
+              x: prevLayer.x + prevLayer.width,
+              y: prevLayer.y + prevLayer.width,
+            });
+
+            const { x, y } = getTransformedLayerPoint([leftTop, rightTop, leftBottom, rightBottom]);
+
+            // const pointTransform = new Matrix(...getInitTransform({ x, y })).append(
+            //   new Matrix(
+            //     ...getInitTransform({
+            //       x: initialBounds.x,
+            //       y: initialBounds.y,
+            //     })
+            //   ).invert()
+            // );
+
+            // const { x, y } = new Matrix()
+            //   .append(prependedTransform)
+            //   // .append(pointTransform)
+            //   .apply({ x: prevLayer.x, y: prevLayer.y });
+
+            // console.log(prevLayer.fill, targetPoint);
+
+            // const { x, y } = resizeBounds(
+            //   { x: layer.get("x"), y: layer.get("y"), width: layer.get("width"), height: layer.get("height") },
+            //   corner,
+            //   point
+            // );
+
+            layer.update({
+              x,
+              y,
+              width,
+              height,
+              transform,
+            });
+          }
+        }
+      } else {
+        const layer = liveLayers.get(selections[0]);
+        const { x, y } = resizeBounds(initialBounds, corner, point);
+
+        if (layer) {
+          const { width, height, transform } = resizeRect(corner, point, {
+            width: layer.get("width"),
+            height: layer.get("height"),
+            transform: layer.get("transform"),
+          });
+
+          console.log("resizing", x, y, transform);
+
+          layer.update({
+            x,
+            y,
+            width,
+            height,
+            transform,
+          });
+        }
       }
     },
     [canvasState]
@@ -433,7 +562,7 @@ export const Canvas = ({ boardId }: CanvasProps) => {
         redo={history.redo}
       />
       <ZoomTool />
-      {canvasState.mode !== CanvasMode.SelectionNet && (
+      {![CanvasMode.SelectionNet, CanvasMode.Translating, CanvasMode.Resizing].includes(canvasState.mode) && (
         <SelectionTools camera={camera} setLastUsedColor={setLastUsedColor} />
       )}
       <svg

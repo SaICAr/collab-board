@@ -1,9 +1,8 @@
 "use client";
 
 import { memo, useMemo } from "react";
-import { useSelf, useStorage } from "@liveblocks/react/suspense";
 
-import { LayerType, Side, XYWH } from "@/types/canvas";
+import { Side, XYWH } from "@/types/canvas";
 import { useSelectionBounds } from "@/hooks/use-selection-bounds";
 
 interface SelectionBoxProps {
@@ -13,10 +12,6 @@ interface SelectionBoxProps {
 export const HANDLE_WIDTH = 8;
 
 export const SelectionBox = memo(({ onResizeHandlePointerDown }: SelectionBoxProps) => {
-  const soleLayerId = useSelf((me) => (me.presence.selection.length === 1 ? me.presence.selection[0] : null));
-
-  const isShowingHandles = useStorage((root) => soleLayerId && root.layers.get(soleLayerId)?.type !== LayerType.Path);
-
   const bounds = useSelectionBounds();
 
   const handles = useMemo(() => {
@@ -113,25 +108,34 @@ export const SelectionBox = memo(({ onResizeHandlePointerDown }: SelectionBoxPro
         height={bounds.height}
       />
 
-      {isShowingHandles && (
-        <>
-          {handles.map((handle, index) => (
-            <rect
-              key={index}
-              className="fill-white stroke-1 stroke-blue-500"
-              x={0}
-              y={0}
-              style={{
-                cursor: handle.cursor,
-                width: `${HANDLE_WIDTH}px`,
-                height: `${HANDLE_WIDTH}px`,
-                transform: `translate(${handle.x}px, ${handle.y}px)`,
-              }}
-              onPointerDown={handle.onPointerDown}
-            />
-          ))}
-        </>
-      )}
+      {handles.map((handle, index) => (
+        <rect
+          key={index}
+          className="fill-white stroke-1 stroke-blue-500"
+          x={0}
+          y={0}
+          style={{
+            cursor: handle.cursor,
+            width: `${HANDLE_WIDTH}px`,
+            height: `${HANDLE_WIDTH}px`,
+            transform: `translate(${handle.x}px, ${handle.y}px)`,
+          }}
+          onPointerDown={handle.onPointerDown}
+        />
+      ))}
+
+      <foreignObject
+        style={{
+          transform: `translate(${bounds.x + bounds.width / 2 - 65}px, ${bounds.y + bounds.height + 16}px)`,
+        }}
+        className="bg-blue-500/80 select-none rounded-md"
+        width={130}
+        height={26}
+      >
+        <div className="w-full h-full flex items-center justify-center text-white font-semibold">
+          {Math.round(bounds.width)} x {Math.round(bounds.height)}
+        </div>
+      </foreignObject>
     </>
   );
 });

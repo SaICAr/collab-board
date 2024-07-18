@@ -29,7 +29,7 @@ const calculateFontSize = (width: number, height: number) => {
 
 export const Note = ({ id, layer, onPointerDown, selectionColor }: NoteProps) => {
   const elRef = useRef<HTMLElement>(null);
-  const { x, y, height, width, fill, value } = layer;
+  const { width, height, fill, value, transform } = layer;
 
   const updateValue = useMutation(({ storage }, newValue: string) => {
     const liveLayers = storage.get("layers");
@@ -50,7 +50,7 @@ export const Note = ({ id, layer, onPointerDown, selectionColor }: NoteProps) =>
   return (
     <foreignObject
       style={{
-        transform: `translate(${x}px, ${y}px)`,
+        transform: `matrix(${transform})`,
         outline: selectionColor ? `1px solid ${selectionColor}` : "none",
         backgroundColor: fill ? colorToCss(fill) : "#D97706",
       }}

@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { MAX_LAYERS } from "./canvas";
 import { LiveObject } from "@liveblocks/client";
 import { CanvasMode, CanvasState, ImageLayer, LayerType } from "@/types/canvas";
+import { getInitTransform } from "@/lib/utils";
 
 interface ImageUploadButtonProps {
   // onClick: () => void;
@@ -80,6 +81,7 @@ export const ImageUploadButton = ({ setCanvasState, isActive, isDisabled }: Imag
             width,
             height,
             value: dataUrl,
+            transform: getInitTransform({ x: 0, y: 0 }),
           });
 
           liveLayerIds.push(layerId);

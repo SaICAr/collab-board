@@ -49,7 +49,7 @@ export const SelectionNet = memo(({ canvasState }: SelectionNetProps) => {
             height={26}
           >
             <div className="w-full h-full flex items-center justify-center text-white font-semibold">
-              {width} x {height}
+              {Math.round(width)} x {Math.round(height)}
             </div>
           </foreignObject>
         )}

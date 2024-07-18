@@ -12,7 +12,7 @@ interface ImageProps {
 }
 
 export const Image = ({ id, layer, onPointerDown, selectionColor }: ImageProps) => {
-  const { x, y, width, height, value } = layer;
+  const { width, height, value, transform } = layer;
 
   const bounds = useMemo(() => boundingBox([layer]), [layer]);
 
@@ -36,7 +36,7 @@ export const Image = ({ id, layer, onPointerDown, selectionColor }: ImageProps) 
         href={value}
         onPointerDown={(e) => onPointerDown(e, id)}
         // 开启GPU加速
-        style={{ transform: `translate(${x}px, ${y}px)` }}
+        style={{ transform: `matrix(${transform})` }}
         x={0}
         y={0}
         width={width}

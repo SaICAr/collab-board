@@ -24,6 +24,7 @@ type BaseLayer<T> = {
   y: number;
   height: number;
   width: number;
+  transform: [number, number, number, number, number, number];
   fill?: Color;
   value?: string;
 };
@@ -93,3 +94,42 @@ export type InsertableLayerType =
   | LayerType.Note
   | LayerType.Text
   | LayerType.Image;
+
+// export enum Direction {
+//   NorthWest,
+//   North,
+//   NorthEast,
+//   East,
+//   SouthWest,
+//   South,
+//   SouthEast,
+//   West,
+// }
+
+export type MatrixArr = [number, number, number, number, number, number];
+
+export interface TransformRect {
+  width: number;
+  height: number;
+  transform: MatrixArr;
+}
+
+export interface ResizeOp {
+  getLocalOrigin(width: number, height: number): Point;
+  getNewSize(
+    newLocalPt: Point,
+    localOrigin: Point,
+    rect: { width: number; height: number }
+  ): {
+    width: number;
+    height: number;
+  };
+  /**
+   * 保持缩放比例时，是基于 width 还是 height 去计算新的 width height
+   */
+  isBaseWidthWhenKeepRatio(isWidthLarger: boolean): boolean;
+  /**
+   * 基于中心缩放时，对 size 进行修正
+   */
+  getSizeWhenScaleFromCenter(width: number, height: number): { width: number; height: number };
+}
