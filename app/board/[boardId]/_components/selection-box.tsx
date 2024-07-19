@@ -2,8 +2,12 @@
 
 import { memo, useMemo } from "react";
 
-import { Side, XYWH } from "@/types/canvas";
+import { Layer, MatrixArr, Point, Side, XYWH } from "@/types/canvas";
 import { useSelectionBounds } from "@/hooks/use-selection-bounds";
+import { useSelf, useStorage } from "@liveblocks/react/suspense";
+import { Matrix } from "pixi.js";
+import { getTransformedRectPoint } from "@/lib/utils";
+import { useBboxTransform } from "@/store/use-bbox-transform";
 
 interface SelectionBoxProps {
   onResizeHandlePointerDown: (corner: Side, initialBounds: XYWH) => void;
@@ -12,16 +16,35 @@ interface SelectionBoxProps {
 export const HANDLE_WIDTH = 8;
 
 export const SelectionBox = memo(({ onResizeHandlePointerDown }: SelectionBoxProps) => {
-  const bounds = useSelectionBounds();
+  // const bounds = useSelectionBounds();
+  // const { transform } = useBboxTransform();
+  const layers = useStorage((root) => root.layers);
+  const selections = useSelf((me) => me.presence.selection);
+  const bounds = layers.get(selections[0]);
+  const transform = layers.get(selections[0])?.transform;
 
   const handles = useMemo(() => {
-    if (!bounds) return [];
+    if (!bounds || !transform) return [];
+
+    const zero = { x: 0, y: 0 };
+    const sX = Math.sign(transform[0]);
+    const sY = Math.sign(transform[3]);
+
+    // 找到transform后对应的坐标
+    const leftTop = new Matrix(...transform).translate(0, 0).apply(zero);
+    const rightTop = new Matrix(...transform).translate(sX * bounds.width, 0).apply(zero);
+    const leftBottom = new Matrix(...transform).translate(0, sY * bounds.height).apply(zero);
+    const rightBottom = new Matrix(...transform).translate(sX * bounds.width, sY * bounds.height).apply(zero);
+    const top = new Matrix(...transform).translate((sX * bounds.width) / 2, 0).apply(zero);
+    const bottom = new Matrix(...transform).translate((sX * bounds.width) / 2, sY * bounds.height).apply(zero);
+    const left = new Matrix(...transform).translate(0, (sY * bounds.height) / 2).apply(zero);
+    const right = new Matrix(...transform).translate(sX * bounds.width, (sY * bounds.height) / 2).apply(zero);
 
     return [
       {
         cursor: "nwse-resize",
-        x: bounds.x - HANDLE_WIDTH / 2,
-        y: bounds.y - HANDLE_WIDTH / 2,
+        x: leftTop.x - HANDLE_WIDTH / 2,
+        y: leftTop.y - HANDLE_WIDTH / 2,
         onPointerDown: (e: React.PointerEvent) => {
           e.stopPropagation();
           onResizeHandlePointerDown(Side.Top + Side.Left, bounds);
@@ -29,8 +52,8 @@ export const SelectionBox = memo(({ onResizeHandlePointerDown }: SelectionBoxPro
       },
       {
         cursor: "ns-resize",
-        x: bounds.x + bounds.width / 2 - HANDLE_WIDTH / 2,
-        y: bounds.y - HANDLE_WIDTH / 2,
+        x: top.x - HANDLE_WIDTH / 2,
+        y: top.y - HANDLE_WIDTH / 2,
         onPointerDown: (e: React.PointerEvent) => {
           e.stopPropagation();
           onResizeHandlePointerDown(Side.Top, bounds);
@@ -38,8 +61,8 @@ export const SelectionBox = memo(({ onResizeHandlePointerDown }: SelectionBoxPro
       },
       {
         cursor: "nesw-resize",
-        x: bounds.x + bounds.width - HANDLE_WIDTH / 2,
-        y: bounds.y - HANDLE_WIDTH / 2,
+        x: rightTop.x - HANDLE_WIDTH / 2,
+        y: rightTop.y - HANDLE_WIDTH / 2,
         onPointerDown: (e: React.PointerEvent) => {
           e.stopPropagation();
           onResizeHandlePointerDown(Side.Top + Side.Right, bounds);
@@ -47,8 +70,8 @@ export const SelectionBox = memo(({ onResizeHandlePointerDown }: SelectionBoxPro
       },
       {
         cursor: "ew-resize",
-        x: bounds.x + bounds.width - HANDLE_WIDTH / 2,
-        y: bounds.y + bounds.height / 2 - HANDLE_WIDTH / 2,
+        x: right.x - HANDLE_WIDTH / 2,
+        y: right.y - HANDLE_WIDTH / 2,
         onPointerDown: (e: React.PointerEvent) => {
           e.stopPropagation();
           onResizeHandlePointerDown(Side.Right, bounds);
@@ -56,8 +79,8 @@ export const SelectionBox = memo(({ onResizeHandlePointerDown }: SelectionBoxPro
       },
       {
         cursor: "nwse-resize",
-        x: bounds.x + bounds.width - HANDLE_WIDTH / 2,
-        y: bounds.y + bounds.height - HANDLE_WIDTH / 2,
+        x: rightBottom.x - HANDLE_WIDTH / 2,
+        y: rightBottom.y - HANDLE_WIDTH / 2,
         onPointerDown: (e: React.PointerEvent) => {
           e.stopPropagation();
           onResizeHandlePointerDown(Side.Right + Side.Bottom, bounds);
@@ -65,8 +88,8 @@ export const SelectionBox = memo(({ onResizeHandlePointerDown }: SelectionBoxPro
       },
       {
         cursor: "ns-resize",
-        x: bounds.x + bounds.width / 2 - HANDLE_WIDTH / 2,
-        y: bounds.y + bounds.height - HANDLE_WIDTH / 2,
+        x: bottom.x - HANDLE_WIDTH / 2,
+        y: bottom.y - HANDLE_WIDTH / 2,
         onPointerDown: (e: React.PointerEvent) => {
           e.stopPropagation();
           onResizeHandlePointerDown(Side.Bottom, bounds);
@@ -74,8 +97,8 @@ export const SelectionBox = memo(({ onResizeHandlePointerDown }: SelectionBoxPro
       },
       {
         cursor: "nesw-resize",
-        x: bounds.x - HANDLE_WIDTH / 2,
-        y: bounds.y + bounds.height - HANDLE_WIDTH / 2,
+        x: leftBottom.x - HANDLE_WIDTH / 2,
+        y: leftBottom.y - HANDLE_WIDTH / 2,
         onPointerDown: (e: React.PointerEvent) => {
           e.stopPropagation();
           onResizeHandlePointerDown(Side.Bottom + Side.Left, bounds);
@@ -83,15 +106,15 @@ export const SelectionBox = memo(({ onResizeHandlePointerDown }: SelectionBoxPro
       },
       {
         cursor: "ew-resize",
-        x: bounds.x - HANDLE_WIDTH / 2,
-        y: bounds.y + bounds.height / 2 - HANDLE_WIDTH / 2,
+        x: left.x - HANDLE_WIDTH / 2,
+        y: left.y - HANDLE_WIDTH / 2,
         onPointerDown: (e: React.PointerEvent) => {
           e.stopPropagation();
           onResizeHandlePointerDown(Side.Left, bounds);
         },
       },
     ];
-  }, [bounds, onResizeHandlePointerDown]);
+  }, [bounds, onResizeHandlePointerDown, transform]);
 
   if (!bounds) {
     return null;

@@ -19,7 +19,7 @@ import {
   connectionIdToColor,
   findIntersectingLayersWithRectangle,
   getInitTransform,
-  getTransformedLayerPoint,
+  getTransformedRectPoint,
   matrixToArray,
   penPointsToPathLayer,
   pointerEventToCanvasPoint,
@@ -269,11 +269,9 @@ export const Canvas = ({ boardId }: CanvasProps) => {
         const layer = liveLayers.get(id);
 
         if (layer) {
-          const x = layer.get("x") + offset.x;
-          const y = layer.get("y") + offset.y;
-          const transform = matrixToArray(new Matrix(...layer.get("transform")).translate(offset.x, offset.y));
-
-          console.log("translating", x, y, transform);
+          const { width, height, transform: _transform } = layer.toImmutable();
+          const transform = matrixToArray(new Matrix(..._transform).translate(offset.x, offset.y));
+          const { x, y } = getTransformedRectPoint(width, height, transform);
 
           layer.update({
             x,
@@ -338,37 +336,7 @@ export const Canvas = ({ boardId }: CanvasProps) => {
 
             const { width, height, transform } = recomputeTransformRect(rect);
 
-            const leftTop = prependedTransform.apply({ x: prevLayer.x, y: prevLayer.y });
-            const rightTop = prependedTransform.apply({ x: prevLayer.x + prevLayer.width, y: prevLayer.y });
-            const leftBottom = prependedTransform.apply({ x: prevLayer.x, y: prevLayer.y + prevLayer.height });
-            const rightBottom = prependedTransform.apply({
-              x: prevLayer.x + prevLayer.width,
-              y: prevLayer.y + prevLayer.width,
-            });
-
-            const { x, y } = getTransformedLayerPoint([leftTop, rightTop, leftBottom, rightBottom]);
-
-            // const pointTransform = new Matrix(...getInitTransform({ x, y })).append(
-            //   new Matrix(
-            //     ...getInitTransform({
-            //       x: initialBounds.x,
-            //       y: initialBounds.y,
-            //     })
-            //   ).invert()
-            // );
-
-            // const { x, y } = new Matrix()
-            //   .append(prependedTransform)
-            //   // .append(pointTransform)
-            //   .apply({ x: prevLayer.x, y: prevLayer.y });
-
-            // console.log(prevLayer.fill, targetPoint);
-
-            // const { x, y } = resizeBounds(
-            //   { x: layer.get("x"), y: layer.get("y"), width: layer.get("width"), height: layer.get("height") },
-            //   corner,
-            //   point
-            // );
+            const { x, y } = getTransformedRectPoint(width, height, transform);
 
             layer.update({
               x,
@@ -381,7 +349,6 @@ export const Canvas = ({ boardId }: CanvasProps) => {
         }
       } else {
         const layer = liveLayers.get(selections[0]);
-        const { x, y } = resizeBounds(initialBounds, corner, point);
 
         if (layer) {
           const { width, height, transform } = resizeRect(corner, point, {
@@ -390,7 +357,7 @@ export const Canvas = ({ boardId }: CanvasProps) => {
             transform: layer.get("transform"),
           });
 
-          console.log("resizing", x, y, transform);
+          const { x, y } = getTransformedRectPoint(width, height, transform);
 
           layer.update({
             x,

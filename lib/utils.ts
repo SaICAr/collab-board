@@ -351,7 +351,7 @@ export const resizeRect = (
   const localOrigin = resizeOp.getLocalOrigin(rect.width, rect.height);
 
   const newLocalPt = transform.applyInverse(newGlobalPt);
-  console.log("newLocalPt", newLocalPt);
+  // console.log("newLocalPt", newLocalPt);
 
   let size = resizeOp.getNewSize(newLocalPt, localOrigin, rect);
 
@@ -438,10 +438,21 @@ export const getInitTransform = ({ x, y }: Point): MatrixArr => {
   return matrixToArray(new Matrix().translate(x, y));
 };
 
-// 变换前后图形的八个点位，计算出变换后左上角对应point
-export const getTransformedLayerPoint = (points: Point[]): Point => {
-  const minX = Math.min(...points.map((p) => p.x));
-  const minY = Math.min(...points.map((p) => p.y));
+// 计算出变换后左上角对应point
+export const getTransformedRectPoint = (width: number, height: number, transform: MatrixArr): Point => {
+  let point = { x: 0, y: 0 };
+  const sX = Math.sign(transform[0]);
+  const sY = Math.sign(transform[3]);
 
-  return { x: minX, y: minY };
+  if (sX < 0 && sY > 0) {
+    point = new Matrix(...transform).translate(sX * width, 0).apply(point);
+  } else if (sX > 0 && sY < 0) {
+    point = new Matrix(...transform).translate(0, sY * height).apply(point);
+  } else if (sX < 0 && sY < 0) {
+    // 找对角
+    point = new Matrix(...transform).translate(sX * width, sY * height).apply(point);
+  } else {
+    point = new Matrix(...transform).apply(point);
+  }
+  return point;
 };
