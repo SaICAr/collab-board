@@ -53,7 +53,7 @@ export const SelectionBox = memo(({ onResizeHandlePointerDown }: SelectionBoxPro
 
     return [
       {
-        cursor: "nwse-resize",
+        cursor: sX * sY > 0 ? "nwse-resize" : "nesw-resize",
         x: leftTop.x - HANDLE_WIDTH / 2,
         y: leftTop.y - HANDLE_WIDTH / 2,
         onPointerDown: (e: React.PointerEvent) => {
@@ -71,7 +71,7 @@ export const SelectionBox = memo(({ onResizeHandlePointerDown }: SelectionBoxPro
         },
       },
       {
-        cursor: "nesw-resize",
+        cursor: sX * sY > 0 ? "nesw-resize" : "nwse-resize",
         x: rightTop.x - HANDLE_WIDTH / 2,
         y: rightTop.y - HANDLE_WIDTH / 2,
         onPointerDown: (e: React.PointerEvent) => {
@@ -89,7 +89,7 @@ export const SelectionBox = memo(({ onResizeHandlePointerDown }: SelectionBoxPro
         },
       },
       {
-        cursor: "nwse-resize",
+        cursor: sX * sY > 0 ? "nwse-resize" : "nesw-resize",
         x: rightBottom.x - HANDLE_WIDTH / 2,
         y: rightBottom.y - HANDLE_WIDTH / 2,
         onPointerDown: (e: React.PointerEvent) => {
@@ -107,7 +107,7 @@ export const SelectionBox = memo(({ onResizeHandlePointerDown }: SelectionBoxPro
         },
       },
       {
-        cursor: "nesw-resize",
+        cursor: sX * sY > 0 ? "nesw-resize" : "nwse-resize",
         x: leftBottom.x - HANDLE_WIDTH / 2,
         y: leftBottom.y - HANDLE_WIDTH / 2,
         onPointerDown: (e: React.PointerEvent) => {
