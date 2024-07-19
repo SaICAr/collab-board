@@ -14,7 +14,7 @@ export const Loading = () => {
       <Info.Skeleton />
       <Participants.Skeleton />
       <Toolbar.Skeleton />
-      <ZoomTool.Skeleton />
+      {/* <ZoomTool.Skeleton /> */}
     </main>
   );
 };

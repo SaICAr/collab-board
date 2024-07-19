@@ -3,7 +3,7 @@
 import { nanoid } from "nanoid";
 import { Matrix } from "pixi.js";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { LiveMap, LiveObject } from "@liveblocks/client";
+import { LiveObject } from "@liveblocks/client";
 import {
   useHistory,
   useCanUndo,
@@ -24,7 +24,6 @@ import {
   penPointsToPathLayer,
   pointerEventToCanvasPoint,
   recomputeTransformRect,
-  resizeBounds,
   resizeRect,
 } from "@/lib/utils";
 import {
@@ -51,7 +50,6 @@ import { SelectionBox } from "./selection-box";
 import { SelectionTools } from "./selection-tools";
 import { Path } from "./layers/path";
 import { SelectionNet } from "./selection-net";
-import { ZoomTool } from "./zoom-tool";
 import { DownloadButton } from "./download-button";
 
 export const MAX_LAYERS = 100;
@@ -349,12 +347,13 @@ export const Canvas = ({ boardId }: CanvasProps) => {
         }
       } else {
         const layer = liveLayers.get(selections[0]);
+        const prevLayer = prevLayers.current?.get(selections[0]);
 
-        if (layer) {
+        if (layer && prevLayer) {
           const { width, height, transform } = resizeRect(corner, point, {
-            width: layer.get("width"),
-            height: layer.get("height"),
-            transform: layer.get("transform"),
+            width: prevLayer.width,
+            height: prevLayer.height,
+            transform: prevLayer.transform,
           });
 
           const { x, y } = getTransformedRectPoint(width, height, transform);
@@ -528,7 +527,7 @@ export const Canvas = ({ boardId }: CanvasProps) => {
         undo={history.undo}
         redo={history.redo}
       />
-      <ZoomTool />
+      {/* <ZoomTool /> */}
       {![CanvasMode.SelectionNet, CanvasMode.Translating, CanvasMode.Resizing].includes(canvasState.mode) && (
         <SelectionTools camera={camera} setLastUsedColor={setLastUsedColor} />
       )}

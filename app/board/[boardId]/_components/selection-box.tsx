@@ -1,13 +1,12 @@
 "use client";
 
-import { memo, useMemo } from "react";
+import { memo, useEffect, useMemo } from "react";
 
-import { Layer, MatrixArr, Point, Side, XYWH } from "@/types/canvas";
+import { MatrixArr, Side, XYWH } from "@/types/canvas";
 import { useSelectionBounds } from "@/hooks/use-selection-bounds";
 import { useSelf, useStorage } from "@liveblocks/react/suspense";
 import { Matrix } from "pixi.js";
-import { getTransformedRectPoint } from "@/lib/utils";
-import { useBboxTransform } from "@/store/use-bbox-transform";
+import { getInitTransform, matrixToArray } from "@/lib/utils";
 
 interface SelectionBoxProps {
   onResizeHandlePointerDown: (corner: Side, initialBounds: XYWH) => void;
@@ -16,12 +15,24 @@ interface SelectionBoxProps {
 export const HANDLE_WIDTH = 8;
 
 export const SelectionBox = memo(({ onResizeHandlePointerDown }: SelectionBoxProps) => {
-  // const bounds = useSelectionBounds();
-  // const { transform } = useBboxTransform();
+  const bounds = useSelectionBounds();
   const layers = useStorage((root) => root.layers);
   const selections = useSelf((me) => me.presence.selection);
-  const bounds = layers.get(selections[0]);
-  const transform = layers.get(selections[0])?.transform;
+
+  const transform = useMemo<MatrixArr>(() => {
+    if (!bounds) {
+      return matrixToArray(new Matrix());
+    }
+
+    if (selections.length === 1) {
+      const layer = layers.get(selections[0]);
+      if (layer) {
+        return layer.transform;
+      }
+    }
+
+    return getInitTransform({ x: bounds.x, y: bounds.y });
+  }, [bounds, layers, selections]);
 
   const handles = useMemo(() => {
     if (!bounds || !transform) return [];
