@@ -212,7 +212,7 @@ export const Canvas = ({ boardId }: CanvasProps) => {
   );
 
   const insertLayer = useMutation(
-    ({ storage }, layerType: InsertableLayerType, current: Point, origin: Point) => {
+    ({ storage, setMyPresence }, layerType: InsertableLayerType, current: Point, origin: Point) => {
       const liveLayers = storage.get("layers");
 
       if (
@@ -244,8 +244,8 @@ export const Canvas = ({ boardId }: CanvasProps) => {
       liveLayerIds.push(layerId);
       liveLayers.set(layerId, layer);
 
-      // setMyPresence({ selection: [layerId] }, { addToHistory: true });
-      setCanvasState({ layerType, mode: CanvasMode.Inserting });
+      setMyPresence({ selection: [layerId] }, { addToHistory: true });
+      setCanvasState({ mode: CanvasMode.None });
     },
     [lastUsedColor]
   );
@@ -520,6 +520,7 @@ export const Canvas = ({ boardId }: CanvasProps) => {
       </div>
 
       <Toolbar
+        camera={camera}
         canvasState={canvasState}
         setCanvasState={setCanvasState}
         canUndo={canUndo}

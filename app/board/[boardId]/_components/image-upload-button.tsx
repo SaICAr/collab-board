@@ -13,19 +13,17 @@ import { Label } from "@/components/ui/label";
 
 import { MAX_LAYERS } from "./canvas";
 import { LiveObject } from "@liveblocks/client";
-import { CanvasMode, CanvasState, ImageLayer, LayerType } from "@/types/canvas";
+import { Camera, CanvasMode, CanvasState, ImageLayer, LayerType } from "@/types/canvas";
 import { getInitTransform } from "@/lib/utils";
 
 interface ImageUploadButtonProps {
-  // onClick: () => void;
+  camera: Camera;
   setCanvasState: (newState: CanvasState) => void;
-  isActive?: boolean;
-  isDisabled?: boolean;
 }
 
 const MAX_FILE_SIZE = 128 * 1024;
 
-export const ImageUploadButton = ({ setCanvasState, isActive, isDisabled }: ImageUploadButtonProps) => {
+export const ImageUploadButton = ({ camera, setCanvasState }: ImageUploadButtonProps) => {
   const fileRef = useRef<HTMLInputElement | null>(null);
   const fileAccept = useMemo(() => ["image/png", "image/jpeg", "image/svg+xml"], []);
 
@@ -71,17 +69,19 @@ export const ImageUploadButton = ({ setCanvasState, isActive, isDisabled }: Imag
           // TODO: 后续考虑缩放
           const width = img.width;
           const height = img.height;
+          const x = window.innerWidth / 2 - width / 2 - camera.x;
+          const y = window.innerHeight / 2 - height / 2 - camera.y;
 
           const liveLayerIds = storage.get("layerIds");
           const layerId = nanoid();
           const layer = new LiveObject<ImageLayer>({
             type: LayerType.Image,
-            x: 0,
-            y: 0,
+            x,
+            y,
             width,
             height,
             value: dataUrl,
-            transform: getInitTransform({ x: 0, y: 0 }),
+            transform: getInitTransform({ x, y }),
           });
 
           liveLayerIds.push(layerId);
@@ -98,19 +98,13 @@ export const ImageUploadButton = ({ setCanvasState, isActive, isDisabled }: Imag
 
       reader.addEventListener("load", listener);
     },
-    [fileAccept]
+    [fileAccept, camera]
   );
 
   return (
     <Hint label="图片上传" side="right" sideOffset={14}>
       <>
-        <Button
-          disabled={isDisabled}
-          // onClick={onClick}
-          size="icon"
-          variant={"board"}
-          asChild
-        >
+        <Button size="icon" variant={"board"} asChild>
           <Label htmlFor="image-upload" className="cursor-pointer">
             <ImageUp />
           </Label>

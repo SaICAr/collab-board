@@ -1,11 +1,12 @@
 import { Circle, MousePointer2, Pencil, Redo2, Square, StickyNote, Type, Undo2 } from "lucide-react";
 
-import { CanvasMode, CanvasState, LayerType } from "@/types/canvas";
+import { Camera, CanvasMode, CanvasState, LayerType } from "@/types/canvas";
 
 import { ToolButton } from "./tool-button";
 import { ImageUploadButton } from "./image-upload-button";
 
 interface ToolbarProps {
+  camera: Camera;
   canvasState: CanvasState;
   setCanvasState: (newState: CanvasState) => void;
   undo: () => void;
@@ -14,7 +15,7 @@ interface ToolbarProps {
   canRedo: boolean;
 }
 
-export const Toolbar = ({ canvasState, setCanvasState, undo, redo, canUndo, canRedo }: ToolbarProps) => {
+export const Toolbar = ({ camera, canvasState, setCanvasState, undo, redo, canUndo, canRedo }: ToolbarProps) => {
   return (
     <div
       className="absolute top-[50%] -translate-y-[50%] left-2 
@@ -86,7 +87,7 @@ export const Toolbar = ({ canvasState, setCanvasState, undo, redo, canUndo, canR
           isActive={canvasState.mode === CanvasMode.Pencil}
         />
 
-        <ImageUploadButton setCanvasState={setCanvasState} />
+        <ImageUploadButton camera={camera} setCanvasState={setCanvasState} />
       </div>
 
       <div
