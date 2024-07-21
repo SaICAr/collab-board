@@ -3,7 +3,7 @@
 import { memo } from "react";
 import { useStorage } from "@liveblocks/react/suspense";
 
-import { colorToCss } from "@/lib/utils";
+import { DEFAULT_COLOR } from "./canvas";
 import { LayerType } from "@/types/canvas";
 
 import { Rectangle } from "./layers/rectangle";
@@ -37,7 +37,7 @@ export const LayerPreview = memo(({ id, onLayerPointerDown, selectionColor }: La
           x={layer.x}
           y={layer.y}
           points={layer.points}
-          fill={layer.fill ? colorToCss(layer.fill) : "#000"}
+          fill={layer.fill ?? DEFAULT_COLOR}
           onPointerDown={(e) => onLayerPointerDown(e, id)}
           stroke={selectionColor}
         />

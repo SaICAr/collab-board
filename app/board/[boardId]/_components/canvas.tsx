@@ -15,7 +15,6 @@ import {
 } from "@liveblocks/react/suspense";
 
 import {
-  colorToCss,
   connectionIdToColor,
   findIntersectingLayersWithRectangle,
   getInitTransform,
@@ -30,7 +29,6 @@ import {
   Camera,
   CanvasMode,
   CanvasState,
-  Color,
   InsertableLayerType,
   Layer,
   Point,
@@ -53,8 +51,10 @@ import { SelectionNet } from "./selection-net";
 import { DownloadButton } from "./download-button";
 
 export const MAX_LAYERS = 100;
-const SELECTION_NET_THRESHOLD = 5;
+export const SELECTION_NET_THRESHOLD = 5;
 export const INSERT_LAYER_THRESHOLD = 5;
+
+export const DEFAULT_COLOR = "#fff";
 
 interface CanvasProps {
   boardId: string;
@@ -69,11 +69,7 @@ export const Canvas = ({ boardId }: CanvasProps) => {
     mode: CanvasMode.None,
   });
   const [camera, setCamera] = useState<Camera>({ x: 0, y: 0 });
-  const [lastUsedColor, setLastUsedColor] = useState<Color>({
-    r: 255,
-    g: 255,
-    b: 255,
-  });
+  const [lastUsedColor, setLastUsedColor] = useState<string>(DEFAULT_COLOR);
 
   const history = useHistory();
   const canUndo = useCanUndo();
@@ -530,7 +526,7 @@ export const Canvas = ({ boardId }: CanvasProps) => {
       />
       {/* <ZoomTool /> */}
       {![CanvasMode.SelectionNet, CanvasMode.Translating, CanvasMode.Resizing].includes(canvasState.mode) && (
-        <SelectionTools camera={camera} setLastUsedColor={setLastUsedColor} />
+        <SelectionTools lastUsedColor={lastUsedColor} camera={camera} setLastUsedColor={setLastUsedColor} />
       )}
       <svg
         id="svg-canvas"
@@ -558,7 +554,7 @@ export const Canvas = ({ boardId }: CanvasProps) => {
           <SelectionNet canvasState={canvasState} />
           <CursorsPresence />
           {pencilDraft !== null && pencilDraft.length > 0 && (
-            <Path points={pencilDraft} fill={colorToCss(lastUsedColor)} x={0} y={0} />
+            <Path points={pencilDraft} fill={lastUsedColor} x={0} y={0} />
           )}
         </g>
       </svg>

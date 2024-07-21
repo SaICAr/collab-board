@@ -1,4 +1,4 @@
-export type Color = {
+export type RgbColor = {
   r: number;
   g: number;
   b: number;
@@ -25,7 +25,7 @@ type BaseLayer<T> = {
   height: number;
   width: number;
   transform: [number, number, number, number, number, number];
-  fill?: Color;
+  fill?: string;
   value?: string;
 };
 

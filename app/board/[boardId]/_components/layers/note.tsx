@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 import { Kalam } from "next/font/google";
 import ContentEditable, { ContentEditableEvent } from "react-contenteditable";
 
-import { cn, colorToCss, getContrastingTextColor } from "@/lib/utils";
+import { cn, getContrastingTextColor } from "@/lib/utils";
 import { NoteLayer } from "@/types/canvas";
 import { useMutation } from "@liveblocks/react/suspense";
 
@@ -52,7 +52,7 @@ export const Note = ({ id, layer, onPointerDown, selectionColor }: NoteProps) =>
       style={{
         transform: `matrix(${transform})`,
         outline: selectionColor ? `1px solid ${selectionColor}` : "none",
-        backgroundColor: fill ? colorToCss(fill) : "#D97706",
+        backgroundColor: fill ?? "#D97706",
       }}
       className="shadow-md drop-shadow-xl"
       width={width}

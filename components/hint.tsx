@@ -7,12 +7,13 @@ export interface HintProps {
   align?: "start" | "center" | "end";
   sideOffset?: number;
   alignOffset?: number;
+  delayDuration?: number;
 }
 
-export const Hint = ({ label, children, side, align, sideOffset, alignOffset }: HintProps) => {
+export const Hint = ({ label, children, side, align, sideOffset, alignOffset, delayDuration = 100 }: HintProps) => {
   return (
     <TooltipProvider>
-      <Tooltip delayDuration={100}>
+      <Tooltip delayDuration={delayDuration}>
         <TooltipTrigger asChild>{children}</TooltipTrigger>
         <TooltipContent
           side={side}

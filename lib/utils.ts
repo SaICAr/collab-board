@@ -4,7 +4,6 @@ import { twMerge } from "tailwind-merge";
 
 import {
   Camera,
-  Color,
   Layer,
   LayerType,
   PathLayer,
@@ -14,6 +13,7 @@ import {
   MatrixArr,
   TransformRect,
   XYWH,
+  RgbColor,
 } from "@/types/canvas";
 
 const COLORS = ["#D97706", "#059669", "#7C3AED", "#DB2777", "#DC2626"];
@@ -31,10 +31,6 @@ export function pointerEventToCanvasPoint(e: React.PointerEvent, camera: Camera)
     x: Math.round(e.clientX) - camera.x,
     y: Math.round(e.clientY) - camera.y,
   };
-}
-
-export function colorToCss(color: Color) {
-  return `#${color.r.toString(16).padStart(2, "0")}${color.g.toString(16).padStart(2, "0")}${color.b.toString(16).padStart(2, "0")}`;
 }
 
 export const boundingBox = (layers: Layer[]): XYWH | null => {
@@ -146,14 +142,50 @@ export const findIntersectingLayersWithRectangle = (
   return ids;
 };
 
+// rgb 转 hex color
+export function rgbColorToHex(color: RgbColor) {
+  return `#${color.r.toString(16).padStart(2, "0")}${color.g.toString(16).padStart(2, "0")}${color.b.toString(16).padStart(2, "0")}`;
+}
+
+const hexColorToRgb = (hex: string) => {
+  if (!isValidHexColor(hex)) {
+    throw new Error("非法的color hex");
+  }
+
+  // 移除十六进制颜色代码前面的'#'
+  hex = hex.replace(/^#/, "");
+
+  // 如果是3位短格式，将每个数字重复两次
+  if (hex.length === 3) {
+    hex = hex
+      .split("")
+      .map((hexChar) => hexChar + hexChar)
+      .join("");
+  }
+
+  // 将十六进制转换为RGB的十进制值
+  var r = parseInt(hex.substring(0, 2), 16);
+  var g = parseInt(hex.substring(2, 4), 16);
+  var b = parseInt(hex.substring(4, 6), 16);
+
+  return [r, g, b];
+};
+
+const isValidHexColor = (hex: string) => {
+  // 正则表达式匹配标准的6位十六进制颜色代码或3位短格式
+  const regex = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/;
+  return regex.test(hex);
+};
+
 // 获取对比文本颜色
-export function getContrastingTextColor(color: Color) {
-  const luminance = 0.299 * color.r + 0.587 * color.g + 0.114 * color.b;
+export function getContrastingTextColor(color: string) {
+  const [r, g, b] = hexColorToRgb(color);
+  const luminance = 0.299 * r + 0.587 * g + 0.114 * b;
 
   return luminance > 182 ? "black" : "white";
 }
 
-export function penPointsToPathLayer(points: number[][], color: Color): PathLayer {
+export function penPointsToPathLayer(points: number[][], color: string): PathLayer {
   if (points.length < 2) {
     throw new Error("draw points less than 2");
   }

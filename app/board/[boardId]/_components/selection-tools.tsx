@@ -1,35 +1,50 @@
 "use client";
 
-import { memo } from "react";
+import { memo, useMemo } from "react";
 import { BringToFront, SendToBack, Trash2 } from "lucide-react";
-import { useMutation, useSelf } from "@liveblocks/react/suspense";
+import { useMutation, useSelf, useStorage } from "@liveblocks/react/suspense";
 
 import { useDeleteLayers } from "@/hooks/use-delete-layers";
 import { useSelectionBounds } from "@/hooks/use-selection-bounds";
-import { Camera, Color } from "@/types/canvas";
+import { Camera } from "@/types/canvas";
 import { HANDLE_WIDTH } from "./selection-box";
 import { ColorPicker } from "./color-picker";
 import { Button } from "@/components/ui/button";
 import { Hint } from "@/components/hint";
+import { DEFAULT_COLOR } from "./canvas";
+import { TabSeparator } from "@/components/tab-separator";
 
 interface SelectionToolsProps {
   camera: Camera;
-  setLastUsedColor: (color: Color) => void;
+  lastUsedColor: string;
+  setLastUsedColor: (color: string) => void;
 }
 
-export const SelectionTools = memo(({ camera, setLastUsedColor }: SelectionToolsProps) => {
-  const selection = useSelf((me) => me.presence.selection);
+export const SelectionTools = memo(({ camera, lastUsedColor, setLastUsedColor }: SelectionToolsProps) => {
+  const liveLayers = useStorage((root) => root.layers);
+  const selections = useSelf((me) => me.presence.selection);
+
+  const currentColor = useMemo(() => {
+    if (selections.length) {
+      const layer = liveLayers.get(selections[0]);
+      if (layer) {
+        return layer.fill ?? DEFAULT_COLOR;
+      }
+    }
+
+    return DEFAULT_COLOR;
+  }, [selections, liveLayers]);
 
   const setFill = useMutation(
-    ({ storage }, fill: Color) => {
+    ({ storage }, fill: string) => {
       const liveLayers = storage.get("layers");
       setLastUsedColor(fill);
 
-      selection.forEach((id) => {
+      selections.forEach((id) => {
         liveLayers.get(id)?.set("fill", fill);
       });
     },
-    [selection, setLastUsedColor]
+    [selections, setLastUsedColor]
   );
 
   const selectionBounds = useSelectionBounds();
@@ -43,7 +58,7 @@ export const SelectionTools = memo(({ camera, setLastUsedColor }: SelectionTools
       const arr = liveLayerIds.toImmutable();
 
       for (let i = 0; i < arr.length; i++) {
-        if (selection.includes(arr[i])) {
+        if (selections.includes(arr[i])) {
           indices.push(i);
         }
       }
@@ -54,7 +69,7 @@ export const SelectionTools = memo(({ camera, setLastUsedColor }: SelectionTools
         liveLayerIds.move(indices[i], arr.length - 1 - (indices.length - 1 - i));
       }
     },
-    [selection]
+    [selections]
   );
 
   const moveToBack = useMutation(
@@ -64,7 +79,7 @@ export const SelectionTools = memo(({ camera, setLastUsedColor }: SelectionTools
       const arr = liveLayerIds.toImmutable();
 
       for (let i = 0; i < arr.length; i++) {
-        if (selection.includes(arr[i])) {
+        if (selections.includes(arr[i])) {
           indices.push(i);
         }
       }
@@ -74,7 +89,7 @@ export const SelectionTools = memo(({ camera, setLastUsedColor }: SelectionTools
         liveLayerIds.move(indices[i], i);
       }
     },
-    [selection]
+    [selections]
   );
 
   if (!selectionBounds) {
@@ -86,32 +101,38 @@ export const SelectionTools = memo(({ camera, setLastUsedColor }: SelectionTools
 
   return (
     <div
-      className="absolute p-3 rounded-xl bg-white shadow-sm border flex select-none"
+      className="absolute p-3 rounded-xl bg-white shadow-sm border flex select-none items-center gap-x-0.5"
       style={{
         transform: `translate(calc(${x}px - 50%), calc(${y}px - 100% - ${HANDLE_WIDTH * 2}px))`,
       }}
     >
-      <ColorPicker onChange={setFill} />
+      <Hint label="填充" sideOffset={8}>
+        <ColorPicker currentColor={currentColor} onChange={setFill} />
+      </Hint>
 
-      <div className="flex flex-col gap-y-0.5">
-        <Hint label="置为顶层">
+      <TabSeparator />
+
+      <div className="flex gap-x-0.5">
+        <Hint label="置为顶层" sideOffset={8}>
           <Button variant="board" size="icon" onClick={moveToFront}>
             <BringToFront />
           </Button>
         </Hint>
 
-        <Hint label="置为底层">
+        <Hint label="置为底层" sideOffset={8}>
           <Button variant="board" size="icon" onClick={moveToBack}>
             <SendToBack />
           </Button>
         </Hint>
       </div>
 
-      <div className="flex items-center pl-2 ml-2 border-l border-neutral-200">
+      <TabSeparator />
+
+      <Hint label="删除" sideOffset={8}>
         <Button variant="board" size="icon" onClick={deleteLayers}>
           <Trash2 />
         </Button>
-      </div>
+      </Hint>
     </div>
   );
 });

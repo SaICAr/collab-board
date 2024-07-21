@@ -1,7 +1,7 @@
 "use client";
 
-import { colorToCss } from "@/lib/utils";
 import { EllipseLayer } from "@/types/canvas";
+import { DEFAULT_COLOR } from "../canvas";
 
 interface EllipseProps {
   id: string;
@@ -23,7 +23,7 @@ export const Ellipse = ({ id, layer, onPointerDown, selectionColor }: EllipsePro
       cy={height / 2}
       rx={width / 2}
       ry={height / 2}
-      fill={fill ? colorToCss(fill) : "#000"}
+      fill={fill ?? DEFAULT_COLOR}
       stroke={selectionColor || "transparent"}
       strokeWidth={1}
     />

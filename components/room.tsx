@@ -16,7 +16,20 @@ export const Room = ({ children, roomId, fallback }: RoomProps) => {
     <RoomProvider
       id={roomId}
       initialPresence={{ cursor: null, selection: [], pencilDraft: null, penColor: null }}
-      initialStorage={{ layers: new LiveMap<string, LiveObject<Layer>>(), layerIds: new LiveList([]) }}
+      initialStorage={{
+        layers: new LiveMap<string, LiveObject<Layer>>(),
+        layerIds: new LiveList([]),
+        layerColors: new LiveList([
+          "#FFF9B1",
+          "#44CA63",
+          "#278EEF",
+          "#9B69F5",
+          "#D11a85",
+          "#FC8E2A",
+          "#000000",
+          "#FFFFFF",
+        ]),
+      }}
     >
       <ClientSideSuspense fallback={fallback}>{() => children}</ClientSideSuspense>
     </RoomProvider>

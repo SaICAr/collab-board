@@ -12,6 +12,7 @@ import { Id } from "@/convex/_generated/dataModel";
 import { Button } from "@/components/ui/button";
 import { useRenameModal } from "@/store/use-rename-modal";
 import { Actions } from "@/components/actions";
+import { TabSeparator } from "@/components/tab-separator";
 
 interface InfoProps {
   boardId: string;
@@ -21,10 +22,6 @@ const font = Poppins({
   subsets: ["latin"],
   weight: ["600"],
 });
-
-const TabSeparator = () => {
-  return <div className="text-neutral-300 px-1.5"> | </div>;
-};
 
 export const Info = ({ boardId }: InfoProps) => {
   const { onOpen } = useRenameModal();

@@ -2,7 +2,7 @@
 // https://liveblocks.io/docs/api-reference/liveblocks-react#Typing-your-data
 import { LiveList, LiveObject, LiveMap } from "@liveblocks/client";
 
-import { Color, Layer } from "./types/canvas";
+import { Layer } from "./types/canvas";
 
 declare global {
   interface Liveblocks {
@@ -12,13 +12,14 @@ declare global {
       cursor: { x: number; y: number } | null;
       selection: string[];
       pencilDraft: [x: number, y: number, pressure: number][] | null;
-      penColor: Color | null;
+      penColor: string | null;
     };
 
     // The Storage tree for the room, for useMutation, useStorage, etc.
     Storage: {
       layers: LiveMap<string, LiveObject<Layer>>;
       layerIds: LiveList<string>;
+      layerColors: LiveList<string>;
     };
 
     // Custom user info set when authenticating with a secret key

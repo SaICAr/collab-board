@@ -5,7 +5,6 @@ import { shallow, useOthersConnectionIds, useOthersMapped } from "@liveblocks/re
 
 import { Cursor } from "./cursor";
 import { Path } from "./layers/path";
-import { colorToCss } from "@/lib/utils";
 
 const Cursors = () => {
   const ids = useOthersConnectionIds();
@@ -36,7 +35,7 @@ const Drafts = () => {
             <Path
               key={key}
               points={other.pencilDraft}
-              fill={other.pencilColor ? colorToCss(other.pencilColor) : "#000"}
+              fill={other.pencilColor ? other.pencilColor : "#000"}
               x={0}
               y={0}
             />

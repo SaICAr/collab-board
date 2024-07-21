@@ -1,7 +1,7 @@
 "use client";
 
-import { colorToCss } from "@/lib/utils";
 import { RectangleLayer } from "@/types/canvas";
+import { DEFAULT_COLOR } from "../canvas";
 
 interface RectangleProps {
   id: string;
@@ -23,7 +23,7 @@ export const Rectangle = ({ id, layer, onPointerDown, selectionColor }: Rectangl
       y={0}
       width={width}
       height={height}
-      fill={fill ? colorToCss(fill) : "#000"}
+      fill={fill ?? DEFAULT_COLOR}
       stroke={selectionColor || "transparent"}
       strokeWidth={1}
     />
