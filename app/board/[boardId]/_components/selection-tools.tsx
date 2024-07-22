@@ -6,14 +6,17 @@ import { useMutation, useSelf, useStorage } from "@liveblocks/react/suspense";
 
 import { useDeleteLayers } from "@/hooks/use-delete-layers";
 import { useSelectionBounds } from "@/hooks/use-selection-bounds";
-import { Camera, InsertableLayerType, LayerType } from "@/types/canvas";
+import { Camera, InsertableLayerType, LayerType, PathLayer } from "@/types/canvas";
 import { HANDLE_WIDTH } from "./selection-box";
 import { ColorPicker } from "./color-picker";
 import { Button } from "@/components/ui/button";
 import { Hint } from "@/components/hint";
+import { Slider } from "@/components/ui/slider";
 import { DEFAULT_COLOR } from "./canvas";
 import { TabSeparator } from "@/components/tab-separator";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { usePencilStore } from "@/store/use-pencil";
+import { LiveObject } from "@liveblocks/client";
 
 interface SelectionToolsProps {
   camera: Camera;
@@ -22,6 +25,53 @@ interface SelectionToolsProps {
 interface SwitchShapeProps {
   type: InsertableLayerType;
 }
+
+const SwitchPenSize = () => {
+  const liveLayers = useStorage((root) => root.layers);
+  const selections = useSelf((me) => me.presence.selection);
+  const firstPath = useMemo(() => {
+    return Array.from(liveLayers.entries()).find(([id, layer]) => {
+      return selections.includes(id) && layer.type === LayerType.Path;
+    })?.[1] as PathLayer;
+  }, [liveLayers, selections]);
+
+  const setPencilLayerSize = useMutation(({ storage, self }, size: number) => {
+    const layers = storage.get("layers");
+    const selections = self.presence.selection;
+
+    for (const layerId of selections) {
+      const layer = layers.get(layerId) as LiveObject<PathLayer>;
+      if (layer && layer.get("type") === LayerType.Path) {
+        layer.set("size", size);
+      }
+    }
+  }, []);
+
+  if (!firstPath) return null;
+
+  return (
+    <>
+      <Popover>
+        <PopoverTrigger>
+          <Hint label="画笔大小" sideOffset={8}>
+            <div className="w-6 cursor-pointer text-center">{firstPath.size}</div>
+          </Hint>
+        </PopoverTrigger>
+        <PopoverContent className="shadow-none " side="top" sideOffset={20}>
+          <Slider
+            defaultValue={[firstPath.size]}
+            min={2}
+            max={32}
+            step={2}
+            onValueChange={([size]) => setPencilLayerSize(size)}
+          />
+        </PopoverContent>
+      </Popover>
+
+      <TabSeparator />
+    </>
+  );
+};
 
 const SwitchShape = ({ type }: SwitchShapeProps) => {
   const [open, setOpen] = useState(false);
@@ -161,10 +211,11 @@ export const SelectionTools = memo(({ camera }: SelectionToolsProps) => {
       {soloLayer && soloLayer.type !== LayerType.Path && (
         <>
           <SwitchShape type={soloLayer.type} />
-
           <TabSeparator />
         </>
       )}
+
+      {<SwitchPenSize />}
 
       <Popover open={open}>
         <PopoverTrigger>
