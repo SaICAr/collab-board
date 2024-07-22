@@ -4,7 +4,8 @@ import { Camera, CanvasMode, CanvasState, LayerType } from "@/types/canvas";
 
 import { ToolButton } from "./tool-button";
 import { ImageUploadButton } from "./image-upload-button";
-import { ToolBarSide } from "./tool-bar-side";
+import { ToolbarShapePanel } from "./toolbar-shape-panel";
+import { ToolbarPenPanel } from "./toolbar-pen-panel";
 
 interface ToolbarProps {
   camera: Camera;
@@ -45,8 +46,8 @@ export const Toolbar = ({ camera, canvasState, setCanvasState, undo, redo, canUn
           onClick={() => setCanvasState({ mode: CanvasMode.Inserting, layerType: LayerType.Text })}
           isActive={canvasState.mode === CanvasMode.Inserting && canvasState.layerType === LayerType.Text}
         />
-        
-        <ToolBarSide>
+
+        <ToolbarShapePanel>
           <ToolButton
             label="便签"
             icon={StickyNote}
@@ -58,9 +59,9 @@ export const Toolbar = ({ camera, canvasState, setCanvasState, undo, redo, canUn
             }
             isActive={canvasState.mode === CanvasMode.Inserting && canvasState.layerType === LayerType.Note}
           />
-        </ToolBarSide>
+        </ToolbarShapePanel>
 
-        <ToolBarSide>
+        <ToolbarShapePanel>
           <ToolButton
             label="矩形"
             icon={Square}
@@ -72,9 +73,9 @@ export const Toolbar = ({ camera, canvasState, setCanvasState, undo, redo, canUn
             }
             isActive={canvasState.mode === CanvasMode.Inserting && canvasState.layerType === LayerType.Rectangle}
           />
-        </ToolBarSide>
+        </ToolbarShapePanel>
 
-        <ToolBarSide>
+        <ToolbarShapePanel>
           <ToolButton
             label="椭圆"
             icon={Circle}
@@ -86,18 +87,20 @@ export const Toolbar = ({ camera, canvasState, setCanvasState, undo, redo, canUn
             }
             isActive={canvasState.mode === CanvasMode.Inserting && canvasState.layerType === LayerType.Ellipse}
           />
-        </ToolBarSide>
+        </ToolbarShapePanel>
 
-        <ToolButton
-          label="画笔"
-          icon={Pencil}
-          onClick={() =>
-            setCanvasState({
-              mode: CanvasMode.Pencil,
-            })
-          }
-          isActive={canvasState.mode === CanvasMode.Pencil}
-        />
+        <ToolbarPenPanel>
+          <ToolButton
+            label="画笔"
+            icon={Pencil}
+            onClick={() =>
+              setCanvasState({
+                mode: CanvasMode.Pencil,
+              })
+            }
+            isActive={canvasState.mode === CanvasMode.Pencil}
+          />
+        </ToolbarPenPanel>
 
         <ImageUploadButton camera={camera} setCanvasState={setCanvasState} />
       </div>

@@ -5,11 +5,7 @@ import { PopoverTrigger } from "@radix-ui/react-popover";
 import { ColorPicker } from "./color-picker";
 import { useGraphStore } from "@/store/use-graph";
 
-interface ToolBarSideProps {
-  children: React.ReactNode;
-}
-
-export const ToolBarSide = ({ children }: ToolBarSideProps) => {
+export const ToolbarShapePanel = ({ children }: { children: React.ReactNode }) => {
   const { graphColor, setGraphColor } = useGraphStore();
 
   return (

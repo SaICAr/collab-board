@@ -23,6 +23,7 @@ const Drafts = () => {
     (other) => ({
       pencilDraft: other.presence.pencilDraft,
       pencilColor: other.presence.penColor,
+      penSize: other.presence.penSize,
     }),
     shallow
   );
@@ -38,6 +39,7 @@ const Drafts = () => {
               fill={other.pencilColor ? other.pencilColor : "#000"}
               x={0}
               y={0}
+              size={other.penSize ?? 8}
             />
           );
         }

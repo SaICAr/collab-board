@@ -50,6 +50,7 @@ import { Path } from "./layers/path";
 import { SelectionNet } from "./selection-net";
 import { DownloadButton } from "./download-button";
 import { useGraphStore } from "@/store/use-graph";
+import { usePencilStore } from "@/store/use-pencil";
 
 export const MAX_LAYERS = 100;
 export const SELECTION_NET_THRESHOLD = 5;
@@ -69,8 +70,8 @@ export const Canvas = ({ boardId }: CanvasProps) => {
     mode: CanvasMode.None,
   });
   const [camera, setCamera] = useState<Camera>({ x: 0, y: 0 });
-  // const [graphColor, setGraphColor] = useState<string>(DEFAULT_COLOR);
-  const { graphColor, penColor } = useGraphStore();
+  const { graphColor } = useGraphStore();
+  const { pencilSize, pencilColor } = usePencilStore();
 
   const history = useHistory();
   const canUndo = useCanUndo();
@@ -131,10 +132,11 @@ export const Canvas = ({ boardId }: CanvasProps) => {
     ({ setMyPresence }, point: Point, pressure: number) => {
       setMyPresence({
         pencilDraft: [[point.x, point.y, pressure]],
-        penColor: penColor,
+        penColor: pencilColor,
+        penSize: pencilSize,
       });
     },
-    [penColor]
+    [pencilColor, pencilSize]
   );
 
   const continueDrawing = useMutation(
@@ -157,25 +159,28 @@ export const Canvas = ({ boardId }: CanvasProps) => {
     [canvasState.mode]
   );
 
-  const insertPath = useMutation(
-    ({ storage, self, setMyPresence }) => {
-      const liveLayers = storage.get("layers");
-      const { pencilDraft } = self.presence;
-      if (pencilDraft == null || pencilDraft.length < 2 || liveLayers.size >= MAX_LAYERS) {
-        setMyPresence({ pencilDraft: null });
-        return;
-      }
-
-      const id = nanoid();
-      liveLayers.set(id, new LiveObject(penPointsToPathLayer(pencilDraft, penColor)));
-      const liveLayerIds = storage.get("layerIds");
-      liveLayerIds.push(id);
-
+  const insertPath = useMutation(({ storage, self, setMyPresence }) => {
+    const liveLayers = storage.get("layers");
+    const { pencilDraft, penColor, penSize } = self.presence;
+    if (
+      pencilDraft == null ||
+      penColor == null ||
+      penSize == null ||
+      pencilDraft.length < 2 ||
+      liveLayers.size >= MAX_LAYERS
+    ) {
       setMyPresence({ pencilDraft: null });
-      setCanvasState({ mode: CanvasMode.Pencil });
-    },
-    [penColor]
-  );
+      return;
+    }
+
+    const id = nanoid();
+    liveLayers.set(id, new LiveObject(penPointsToPathLayer(pencilDraft, penColor, penSize)));
+    const liveLayerIds = storage.get("layerIds");
+    liveLayerIds.push(id);
+
+    setMyPresence({ pencilDraft: null });
+    setCanvasState({ mode: CanvasMode.Pencil });
+  }, []);
 
   const startInserting = useCallback(
     (point: Point) => {
@@ -554,7 +559,9 @@ export const Canvas = ({ boardId }: CanvasProps) => {
           <SelectionBox onResizeHandlePointerDown={onResizeHandlePointerDown} />
           <SelectionNet canvasState={canvasState} />
           <CursorsPresence />
-          {pencilDraft !== null && pencilDraft.length > 0 && <Path points={pencilDraft} fill={penColor} x={0} y={0} />}
+          {pencilDraft !== null && pencilDraft.length > 0 && (
+            <Path points={pencilDraft} fill={pencilColor} x={0} y={0} size={pencilSize} />
+          )}
         </g>
       </svg>
     </main>

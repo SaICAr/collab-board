@@ -36,6 +36,7 @@ export type NoteLayer = BaseLayer<LayerType.Note>;
 export type ImageLayer = BaseLayer<LayerType.Image>;
 export type PathLayer = BaseLayer<LayerType.Path> & {
   points: number[][];
+  size: number;
 };
 
 export type Point = {

@@ -185,7 +185,7 @@ export function getContrastingTextColor(color: string) {
   return luminance > 182 ? "black" : "white";
 }
 
-export function penPointsToPathLayer(points: number[][], color: string): PathLayer {
+export function penPointsToPathLayer(points: number[][], color: string, size: number): PathLayer {
   if (points.length < 2) {
     throw new Error("draw points less than 2");
   }
@@ -226,6 +226,7 @@ export function penPointsToPathLayer(points: number[][], color: string): PathLay
     height: bottom - top,
     transform: [1, 0, 0, 1, left, top],
     fill: color,
+    size,
     // 将每个点的 x 和 y 坐标归一化为相对于路径层左上角的坐标，压力值保持不变
     points: points.map(([x, y, pressure]) => [x - left, y - top, pressure]),
   };
