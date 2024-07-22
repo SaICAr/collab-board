@@ -39,8 +39,8 @@ export const Info = ({ boardId }: InfoProps) => {
     >
       <Button asChild variant="board" className="px-2">
         <Link href="/">
-          <Image src="/logo.svg" alt="Logo" height={60} width={60} />
-          <span className={cn("font-semibold text-xl ml-2 text-black", font.className)}>Board</span>
+          {/* <Image src="/logo.svg" alt="Logo" height={60} width={60} /> */}
+          <span className={cn("font-semibold text-xl text-black", font.className)}>CollabBoard</span>
         </Link>
       </Button>
 
