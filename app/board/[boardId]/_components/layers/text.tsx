@@ -5,7 +5,6 @@ import ContentEditable, { ContentEditableEvent } from "react-contenteditable";
 import { cn } from "@/lib/utils";
 import { TextLayer } from "@/types/canvas";
 import { useMutation } from "@liveblocks/react/suspense";
-import { DEFAULT_COLOR } from "../canvas";
 
 interface TextProps {
   id: string;
@@ -66,7 +65,7 @@ export const Text = ({ id, layer, onPointerDown, selectionColor }: TextProps) =>
           "w-full h-full flex justify-center items-center text-center drop-shadow-md outline-none",
           font.className
         )}
-        style={{ color: fill ?? DEFAULT_COLOR, fontSize: calculateFontSize(width, height) }}
+        style={{ color: fill ?? "#000", fontSize: calculateFontSize(width, height) }}
       />
     </foreignObject>
   );

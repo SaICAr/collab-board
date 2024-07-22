@@ -6,6 +6,7 @@ import { ToolButton } from "./tool-button";
 import { ImageUploadButton } from "./image-upload-button";
 import { ToolbarShapePanel } from "./toolbar-shape-panel";
 import { ToolbarPenPanel } from "./toolbar-pen-panel";
+import { ToolbarTextPanel } from "./toolbar-text-panel";
 
 interface ToolbarProps {
   camera: Camera;
@@ -40,12 +41,14 @@ export const Toolbar = ({ camera, canvasState, setCanvasState, undo, redo, canUn
           ].includes(canvasState.mode)}
         />
 
-        <ToolButton
-          label="文本"
-          icon={Type}
-          onClick={() => setCanvasState({ mode: CanvasMode.Inserting, layerType: LayerType.Text })}
-          isActive={canvasState.mode === CanvasMode.Inserting && canvasState.layerType === LayerType.Text}
-        />
+        <ToolbarTextPanel>
+          <ToolButton
+            label="文本"
+            icon={Type}
+            onClick={() => setCanvasState({ mode: CanvasMode.Inserting, layerType: LayerType.Text })}
+            isActive={canvasState.mode === CanvasMode.Inserting && canvasState.layerType === LayerType.Text}
+          />
+        </ToolbarTextPanel>
 
         <ToolbarShapePanel>
           <ToolButton

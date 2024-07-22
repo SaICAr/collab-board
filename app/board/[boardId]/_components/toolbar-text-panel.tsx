@@ -3,10 +3,10 @@
 import { Popover, PopoverContent } from "@/components/ui/popover";
 import { PopoverTrigger } from "@radix-ui/react-popover";
 import { ColorPicker } from "./color-picker";
-import { useGraphStore } from "@/store/use-graph";
+import { useTextStore } from "@/store/use-text";
 
-export const ToolbarShapePanel = ({ children }: { children: React.ReactNode }) => {
-  const { graphColor, setGraphColor } = useGraphStore();
+export const ToolbarTextPanel = ({ children }: { children: React.ReactNode }) => {
+  const { textColor, setTextColor } = useTextStore();
 
   return (
     <Popover>
@@ -16,8 +16,8 @@ export const ToolbarShapePanel = ({ children }: { children: React.ReactNode }) =
         sideOffset={14}
         className="max-w-[180px] flex flex-col gap-y-2 font-semibold text-sm"
       >
-        <div>填充颜色</div>
-        <ColorPicker currentColor={graphColor} onChange={setGraphColor} />
+        <div>字体颜色</div>
+        <ColorPicker currentColor={textColor} onChange={setTextColor} />
       </PopoverContent>
     </Popover>
   );

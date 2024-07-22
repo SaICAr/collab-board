@@ -31,6 +31,7 @@ import {
   CanvasState,
   InsertableLayerType,
   Layer,
+  LayerType,
   Point,
   Side,
   TransformRect,
@@ -51,6 +52,7 @@ import { SelectionNet } from "./selection-net";
 import { DownloadButton } from "./download-button";
 import { useGraphStore } from "@/store/use-graph";
 import { usePencilStore } from "@/store/use-pencil";
+import { useTextStore } from "@/store/use-text";
 
 export const MAX_LAYERS = 100;
 export const SELECTION_NET_THRESHOLD = 5;
@@ -72,6 +74,7 @@ export const Canvas = ({ boardId }: CanvasProps) => {
   const [camera, setCamera] = useState<Camera>({ x: 0, y: 0 });
   const { graphColor } = useGraphStore();
   const { pencilSize, pencilColor } = usePencilStore();
+  const { textColor } = useTextStore();
 
   const history = useHistory();
   const canUndo = useCanUndo();
@@ -240,7 +243,7 @@ export const Canvas = ({ boardId }: CanvasProps) => {
         width,
         height,
         transform,
-        fill: graphColor,
+        fill: layerType === LayerType.Text ? textColor : graphColor,
       });
 
       liveLayerIds.push(layerId);
@@ -249,7 +252,7 @@ export const Canvas = ({ boardId }: CanvasProps) => {
       setMyPresence({ selection: [layerId] }, { addToHistory: true });
       setCanvasState({ mode: CanvasMode.None });
     },
-    [graphColor]
+    [graphColor, textColor]
   );
 
   const translateSelectedLayers = useMutation(
@@ -289,6 +292,25 @@ export const Canvas = ({ boardId }: CanvasProps) => {
   const unselectLayers = useMutation(({ self, setMyPresence }) => {
     if (self.presence.selection.length > 0) {
       setMyPresence({ selection: [] }, { addToHistory: true });
+    }
+  }, []);
+
+  const clearEmptyText = useMutation(({ self, storage }) => {
+    const layers = storage.get("layers");
+    const layerIds = storage.get("layerIds");
+
+    for (let layerId of layerIds.toImmutable()) {
+      const layer = layers.get(layerId);
+
+      if (layer && layer.get("type") === LayerType.Text) {
+        if (!layer.get("value")) {
+          layers.delete(layerId);
+          const layerIndex = layerIds.indexOf(layerId);
+          if (layerIndex !== -1) {
+            layerIds.delete(layerIndex);
+          }
+        }
+      }
     }
   }, []);
 
@@ -408,6 +430,7 @@ export const Canvas = ({ boardId }: CanvasProps) => {
 
       if (canvasState.mode === CanvasMode.None || canvasState.mode === CanvasMode.Pressing) {
         unselectLayers();
+        clearEmptyText();
         setCanvasState({ mode: CanvasMode.None });
       } else if (canvasState.mode === CanvasMode.Inserting) {
         canvasState.origin && insertLayer(canvasState.layerType, point, canvasState.origin);
