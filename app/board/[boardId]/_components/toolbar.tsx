@@ -4,6 +4,7 @@ import { Camera, CanvasMode, CanvasState, LayerType } from "@/types/canvas";
 
 import { ToolButton } from "./tool-button";
 import { ImageUploadButton } from "./image-upload-button";
+import { ToolBarSide } from "./tool-bar-side";
 
 interface ToolbarProps {
   camera: Camera;
@@ -37,45 +38,56 @@ export const Toolbar = ({ camera, canvasState, setCanvasState, undo, redo, canUn
             CanvasMode.Resizing,
           ].includes(canvasState.mode)}
         />
+
         <ToolButton
           label="文本"
           icon={Type}
           onClick={() => setCanvasState({ mode: CanvasMode.Inserting, layerType: LayerType.Text })}
           isActive={canvasState.mode === CanvasMode.Inserting && canvasState.layerType === LayerType.Text}
         />
-        <ToolButton
-          label="便签"
-          icon={StickyNote}
-          onClick={() =>
-            setCanvasState({
-              mode: CanvasMode.Inserting,
-              layerType: LayerType.Note,
-            })
-          }
-          isActive={canvasState.mode === CanvasMode.Inserting && canvasState.layerType === LayerType.Note}
-        />
-        <ToolButton
-          label="矩形"
-          icon={Square}
-          onClick={() =>
-            setCanvasState({
-              mode: CanvasMode.Inserting,
-              layerType: LayerType.Rectangle,
-            })
-          }
-          isActive={canvasState.mode === CanvasMode.Inserting && canvasState.layerType === LayerType.Rectangle}
-        />
-        <ToolButton
-          label="椭圆"
-          icon={Circle}
-          onClick={() =>
-            setCanvasState({
-              mode: CanvasMode.Inserting,
-              layerType: LayerType.Ellipse,
-            })
-          }
-          isActive={canvasState.mode === CanvasMode.Inserting && canvasState.layerType === LayerType.Ellipse}
-        />
+        
+        <ToolBarSide>
+          <ToolButton
+            label="便签"
+            icon={StickyNote}
+            onClick={() =>
+              setCanvasState({
+                mode: CanvasMode.Inserting,
+                layerType: LayerType.Note,
+              })
+            }
+            isActive={canvasState.mode === CanvasMode.Inserting && canvasState.layerType === LayerType.Note}
+          />
+        </ToolBarSide>
+
+        <ToolBarSide>
+          <ToolButton
+            label="矩形"
+            icon={Square}
+            onClick={() =>
+              setCanvasState({
+                mode: CanvasMode.Inserting,
+                layerType: LayerType.Rectangle,
+              })
+            }
+            isActive={canvasState.mode === CanvasMode.Inserting && canvasState.layerType === LayerType.Rectangle}
+          />
+        </ToolBarSide>
+
+        <ToolBarSide>
+          <ToolButton
+            label="椭圆"
+            icon={Circle}
+            onClick={() =>
+              setCanvasState({
+                mode: CanvasMode.Inserting,
+                layerType: LayerType.Ellipse,
+              })
+            }
+            isActive={canvasState.mode === CanvasMode.Inserting && canvasState.layerType === LayerType.Ellipse}
+          />
+        </ToolBarSide>
+
         <ToolButton
           label="画笔"
           icon={Pencil}

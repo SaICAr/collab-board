@@ -26,8 +26,8 @@ export const Room = ({ children, roomId, fallback }: RoomProps) => {
           "#9B69F5",
           "#D11a85",
           "#FC8E2A",
-          "#000000",
-          "#FFFFFF",
+          "#000",
+          "#fff",
         ]),
       }}
     >

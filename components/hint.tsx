@@ -22,7 +22,7 @@ export const Hint = ({ label, children, side, align, sideOffset, alignOffset, de
           alignOffset={alignOffset}
           className="text-white bg-black border-black"
         >
-          <p className="font-semibold capitalize">{label}</p>
+          <p className="font-semibold">{label}</p>
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>

@@ -49,11 +49,11 @@ import { SelectionTools } from "./selection-tools";
 import { Path } from "./layers/path";
 import { SelectionNet } from "./selection-net";
 import { DownloadButton } from "./download-button";
+import { useGraphStore } from "@/store/use-graph";
 
 export const MAX_LAYERS = 100;
 export const SELECTION_NET_THRESHOLD = 5;
 export const INSERT_LAYER_THRESHOLD = 5;
-
 export const DEFAULT_COLOR = "#fff";
 
 interface CanvasProps {
@@ -69,7 +69,8 @@ export const Canvas = ({ boardId }: CanvasProps) => {
     mode: CanvasMode.None,
   });
   const [camera, setCamera] = useState<Camera>({ x: 0, y: 0 });
-  const [lastUsedColor, setLastUsedColor] = useState<string>(DEFAULT_COLOR);
+  // const [graphColor, setGraphColor] = useState<string>(DEFAULT_COLOR);
+  const { graphColor, penColor } = useGraphStore();
 
   const history = useHistory();
   const canUndo = useCanUndo();
@@ -130,10 +131,10 @@ export const Canvas = ({ boardId }: CanvasProps) => {
     ({ setMyPresence }, point: Point, pressure: number) => {
       setMyPresence({
         pencilDraft: [[point.x, point.y, pressure]],
-        penColor: lastUsedColor,
+        penColor: penColor,
       });
     },
-    [lastUsedColor]
+    [penColor]
   );
 
   const continueDrawing = useMutation(
@@ -166,14 +167,14 @@ export const Canvas = ({ boardId }: CanvasProps) => {
       }
 
       const id = nanoid();
-      liveLayers.set(id, new LiveObject(penPointsToPathLayer(pencilDraft, lastUsedColor)));
+      liveLayers.set(id, new LiveObject(penPointsToPathLayer(pencilDraft, penColor)));
       const liveLayerIds = storage.get("layerIds");
       liveLayerIds.push(id);
 
       setMyPresence({ pencilDraft: null });
       setCanvasState({ mode: CanvasMode.Pencil });
     },
-    [lastUsedColor]
+    [penColor]
   );
 
   const startInserting = useCallback(
@@ -234,7 +235,7 @@ export const Canvas = ({ boardId }: CanvasProps) => {
         width,
         height,
         transform,
-        fill: lastUsedColor,
+        fill: graphColor,
       });
 
       liveLayerIds.push(layerId);
@@ -243,7 +244,7 @@ export const Canvas = ({ boardId }: CanvasProps) => {
       setMyPresence({ selection: [layerId] }, { addToHistory: true });
       setCanvasState({ mode: CanvasMode.None });
     },
-    [lastUsedColor]
+    [graphColor]
   );
 
   const translateSelectedLayers = useMutation(
@@ -526,7 +527,7 @@ export const Canvas = ({ boardId }: CanvasProps) => {
       />
       {/* <ZoomTool /> */}
       {![CanvasMode.SelectionNet, CanvasMode.Translating, CanvasMode.Resizing].includes(canvasState.mode) && (
-        <SelectionTools lastUsedColor={lastUsedColor} camera={camera} setLastUsedColor={setLastUsedColor} />
+        <SelectionTools camera={camera} />
       )}
       <svg
         id="svg-canvas"
@@ -553,9 +554,7 @@ export const Canvas = ({ boardId }: CanvasProps) => {
           <SelectionBox onResizeHandlePointerDown={onResizeHandlePointerDown} />
           <SelectionNet canvasState={canvasState} />
           <CursorsPresence />
-          {pencilDraft !== null && pencilDraft.length > 0 && (
-            <Path points={pencilDraft} fill={lastUsedColor} x={0} y={0} />
-          )}
+          {pencilDraft !== null && pencilDraft.length > 0 && <Path points={pencilDraft} fill={penColor} x={0} y={0} />}
         </g>
       </svg>
     </main>
