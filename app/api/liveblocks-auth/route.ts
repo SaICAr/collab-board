@@ -26,7 +26,7 @@ export async function POST(request: Request) {
   }
 
   const userInfo = {
-    name: user.firstName!,
+    name: user.username ?? user.emailAddresses[0].emailAddress,
     avatar: user.imageUrl!,
   };
 
